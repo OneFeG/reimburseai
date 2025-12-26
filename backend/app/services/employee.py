@@ -4,6 +4,8 @@ Employee Service
 Business logic for employee operations.
 """
 
+from datetime import UTC
+
 from supabase import Client
 
 from app.core.exceptions import ConflictException, NotFoundException
@@ -77,12 +79,7 @@ class EmployeeService:
         Raises:
             NotFoundException: If employee not found
         """
-        result = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("id", employee_id)
-            .execute()
-        )
+        result = self.client.table(self.table).select("*").eq("id", employee_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -92,9 +89,7 @@ class EmployeeService:
 
         return EmployeeResponse(**result.data[0])
 
-    async def get_by_email(
-        self, company_id: str, email: str
-    ) -> EmployeeResponse:
+    async def get_by_email(self, company_id: str, email: str) -> EmployeeResponse:
         """
         Get employee by email within a company.
 
@@ -124,9 +119,7 @@ class EmployeeService:
 
         return EmployeeResponse(**result.data[0])
 
-    async def update(
-        self, employee_id: str, data: EmployeeUpdate
-    ) -> EmployeeResponse:
+    async def update(self, employee_id: str, data: EmployeeUpdate) -> EmployeeResponse:
         """
         Update employee details.
 
@@ -143,12 +136,7 @@ class EmployeeService:
         if not update_data:
             return await self.get_by_id(employee_id)
 
-        result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", employee_id)
-            .execute()
-        )
+        result = self.client.table(self.table).update(update_data).eq("id", employee_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -158,9 +146,7 @@ class EmployeeService:
 
         return EmployeeResponse(**result.data[0])
 
-    async def update_wallet(
-        self, employee_id: str, wallet_address: str
-    ) -> EmployeeResponse:
+    async def update_wallet(self, employee_id: str, wallet_address: str) -> EmployeeResponse:
         """
         Update employee wallet address.
 
@@ -171,14 +157,16 @@ class EmployeeService:
         Returns:
             Updated employee
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         result = (
             self.client.table(self.table)
-            .update({
-                "wallet_address": wallet_address,
-                "wallet_verified_at": datetime.now(timezone.utc).isoformat(),
-            })
+            .update(
+                {
+                    "wallet_address": wallet_address,
+                    "wallet_verified_at": datetime.now(UTC).isoformat(),
+                }
+            )
             .eq("id", employee_id)
             .execute()
         )
@@ -269,20 +257,15 @@ class EmployeeService:
         )
 
         total_receipts = len(receipts.data)
-        pending = len([
-            r for r in receipts.data
-            if r["status"] in ["uploaded", "processing"]
-        ])
+        pending = len([r for r in receipts.data if r["status"] in ["uploaded", "processing"]])
         reimbursed = sum(
-            r.get("payout_amount") or 0
-            for r in receipts.data
-            if r["status"] == "paid"
+            r.get("payout_amount") or 0 for r in receipts.data if r["status"] == "paid"
         )
 
         # This month spend
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         month_receipts = (
@@ -294,9 +277,7 @@ class EmployeeService:
         )
 
         month_spend = sum(
-            r.get("amount") or 0
-            for r in month_receipts.data
-            if r["status"] in ["approved", "paid"]
+            r.get("amount") or 0 for r in month_receipts.data if r["status"] in ["approved", "paid"]
         )
 
         return EmployeeWithStats(
@@ -325,3 +306,16 @@ class EmployeeService:
         )
 
         return len(result.data) > 0
+
+
+# Module-level helper functions and singleton
+employee_service = EmployeeService()
+
+
+async def get_employee(employee_id: str) -> dict | None:
+    """Get employee by ID, returns dict or None."""
+    try:
+        employee = await employee_service.get_by_id(employee_id)
+        return employee.model_dump()
+    except Exception:
+        return None

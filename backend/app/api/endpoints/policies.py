@@ -26,7 +26,7 @@ router = APIRouter()
 async def create_policy(data: PolicyCreate):
     """
     Create a new expense policy for a company.
-    
+
     The new policy will automatically become active,
     and any existing active policy will be deactivated.
     """
@@ -77,7 +77,7 @@ async def get_active_policy(company_id: str):
 async def update_policy(policy_id: str, data: PolicyUpdate):
     """
     Update policy details.
-    
+
     If `is_active` is set to true, this policy will become active
     and any other active policy for the company will be deactivated.
     """

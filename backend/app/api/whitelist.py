@@ -2,10 +2,10 @@
 Wallet Whitelist API endpoints.
 """
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Any
-import logging
 
 from app.services.whitelist import whitelist_service
 
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/whitelist", tags=["whitelist"])
 
 class WalletAddRequest(BaseModel):
     """Request body for adding a wallet to whitelist."""
+
     wallet_address: str = Field(..., description="Wallet address to whitelist")
     company_id: str | None = Field(None, description="Company ID (None for global)")
     employee_id: str | None = Field(None, description="Employee ID if applicable")
@@ -24,12 +25,14 @@ class WalletAddRequest(BaseModel):
 
 class WalletRemoveRequest(BaseModel):
     """Request body for removing a wallet from whitelist."""
+
     wallet_address: str = Field(..., description="Wallet address to remove")
     company_id: str | None = Field(None, description="Company ID (None for global)")
 
 
 class WhitelistEntryResponse(BaseModel):
     """Whitelist entry response."""
+
     id: str
     wallet_address: str
     company_id: str | None
@@ -42,6 +45,7 @@ class WhitelistEntryResponse(BaseModel):
 
 class WalletCheckResponse(BaseModel):
     """Response for wallet whitelist check."""
+
     wallet_address: str
     is_whitelisted: bool
     company_id: str | None = None
@@ -54,14 +58,14 @@ async def check_wallet_whitelisted(
 ) -> WalletCheckResponse:
     """
     Check if a wallet address is whitelisted.
-    
+
     Can check against global whitelist or company-specific whitelist.
     """
     is_whitelisted = await whitelist_service.is_wallet_whitelisted(
         wallet_address=wallet_address,
         company_id=company_id,
     )
-    
+
     return WalletCheckResponse(
         wallet_address=wallet_address.lower(),
         is_whitelisted=is_whitelisted,
@@ -73,7 +77,7 @@ async def check_wallet_whitelisted(
 async def add_wallet_to_whitelist(body: WalletAddRequest):
     """
     Add a wallet to the whitelist.
-    
+
     If company_id is None, the wallet is added to the global whitelist.
     """
     try:
@@ -93,7 +97,7 @@ async def add_wallet_to_whitelist(body: WalletAddRequest):
 async def remove_wallet_from_whitelist(body: WalletRemoveRequest):
     """
     Remove a wallet from the whitelist.
-    
+
     This is a soft delete - the record is kept but marked as inactive.
     """
     try:
@@ -101,7 +105,7 @@ async def remove_wallet_from_whitelist(body: WalletRemoveRequest):
             wallet_address=body.wallet_address,
             company_id=body.company_id,
         )
-        
+
         if removed:
             return {"success": True, "message": "Wallet removed from whitelist"}
         else:
@@ -120,7 +124,7 @@ async def get_company_whitelist(
 ):
     """
     Get whitelisted wallets for a company.
-    
+
     Optionally includes global whitelist entries.
     """
     entries = await whitelist_service.get_company_whitelist(
@@ -134,13 +138,10 @@ async def get_company_whitelist(
 async def get_employee_wallet(employee_id: str):
     """Get the whitelisted wallet for an employee."""
     wallet = await whitelist_service.get_employee_wallet(employee_id)
-    
+
     if not wallet:
-        raise HTTPException(
-            status_code=404,
-            detail="No whitelisted wallet found for employee"
-        )
-    
+        raise HTTPException(status_code=404, detail="No whitelisted wallet found for employee")
+
     return wallet
 
 
@@ -148,7 +149,7 @@ async def get_employee_wallet(employee_id: str):
 async def get_global_whitelist():
     """
     Get global whitelist entries (admin operation).
-    
+
     These wallets are whitelisted for all companies.
     """
     entries = await whitelist_service.get_global_whitelist()

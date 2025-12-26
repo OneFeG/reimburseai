@@ -28,7 +28,7 @@ router = APIRouter()
 async def create_company(data: CompanyCreate):
     """
     Create a new company.
-    
+
     This is called during company onboarding. After creation:
     1. Company starts in 'pending' status
     2. KYB verification should be initiated

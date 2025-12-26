@@ -6,6 +6,16 @@ Main router that combines all endpoint routers.
 
 from fastapi import APIRouter
 
+from app.api import (
+    advance,
+    audit,
+    billing,
+    kyb,
+    ledger,
+    reimburse,
+    treasury,
+    whitelist,
+)
 from app.api.endpoints import (
     companies,
     employees,
@@ -14,16 +24,6 @@ from app.api.endpoints import (
     receipts,
     upload,
     vaults,
-)
-from app.api import (
-    audit,
-    treasury,
-    ledger,
-    advance,
-    kyb,
-    whitelist,
-    billing,
-    reimburse,
 )
 
 api_router = APIRouter()

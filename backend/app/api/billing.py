@@ -2,11 +2,12 @@
 Billing API endpoints for usage tracking and invoicing.
 """
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
-from typing import Any, Literal
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Literal
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from app.services.billing import billing_service
 
@@ -17,6 +18,7 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 
 class UsageSummaryResponse(BaseModel):
     """Usage summary response."""
+
     company_id: str
     period: str
     start_date: str
@@ -29,6 +31,7 @@ class UsageSummaryResponse(BaseModel):
 
 class UsageRecordResponse(BaseModel):
     """Usage record response."""
+
     id: str
     company_id: str
     usage_type: str
@@ -41,6 +44,7 @@ class UsageRecordResponse(BaseModel):
 
 class InvoiceResponse(BaseModel):
     """Invoice response."""
+
     id: str
     company_id: str
     period_start: str
@@ -58,7 +62,7 @@ async def get_usage_summary(
 ):
     """
     Get usage summary for a company.
-    
+
     Returns aggregated usage data for audits, payouts, and advances
     within the specified billing period.
     """
@@ -82,7 +86,7 @@ async def get_usage_records(
 ):
     """
     Get detailed usage records for a company.
-    
+
     Supports filtering by usage type and pagination.
     """
     records = await billing_service.get_usage_records(
@@ -102,7 +106,7 @@ async def generate_invoice(
 ):
     """
     Generate an invoice for a billing period.
-    
+
     Creates a draft invoice with line items for all usage
     within the specified period.
     """
@@ -122,7 +126,7 @@ async def generate_invoice(
 async def get_pricing():
     """
     Get current platform pricing.
-    
+
     Returns the fee structure for all billable operations.
     """
     return {

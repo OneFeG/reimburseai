@@ -8,7 +8,7 @@ This is the primary endpoint that Dev 2 (Frontend Lead) will call.
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 
 from app.core.exceptions import AppException
-from app.schemas.receipt import ReceiptCreate, ReceiptUploadResponse, ReceiptStatus
+from app.schemas.receipt import ReceiptCreate, ReceiptStatus, ReceiptUploadResponse
 from app.services.receipt import ReceiptService
 from app.services.storage import StorageService
 
@@ -21,19 +21,19 @@ router = APIRouter()
     summary="Upload a receipt",
     description="""
     Upload a receipt image for processing.
-    
+
     This endpoint:
     1. Validates the file (type, size)
     2. Uploads to Supabase Storage
     3. Creates a receipt record in the database
     4. Returns a receipt ID for tracking
-    
+
     The receipt will be in 'uploaded' status and ready for AI audit.
-    
+
     **Required Headers:**
     - `X-Company-ID`: The company UUID
     - `X-Employee-ID`: The employee UUID
-    
+
     **Supported file types:** JPEG, PNG, WebP, PDF
     **Max file size:** 10MB
     """,
@@ -47,7 +47,7 @@ async def upload_receipt(
 ):
     """
     Upload a receipt for processing.
-    
+
     This is the main entry point for the expense submission flow:
     1. Employee uploads receipt image
     2. File is stored in Supabase Storage
@@ -57,11 +57,11 @@ async def upload_receipt(
     try:
         # Read file content
         content = await file.read()
-        
+
         # Initialize services
         storage_service = StorageService()
         receipt_service = ReceiptService()
-        
+
         # Upload file to storage
         upload_result = await storage_service.upload_file(
             company_id=x_company_id,
@@ -70,7 +70,7 @@ async def upload_receipt(
             content=content,
             content_type=file.content_type or "application/octet-stream",
         )
-        
+
         # Create receipt record
         receipt_data = ReceiptCreate(
             company_id=x_company_id,
@@ -82,9 +82,9 @@ async def upload_receipt(
             description=description,
             category=category,
         )
-        
+
         receipt = await receipt_service.create(receipt_data)
-        
+
         return ReceiptUploadResponse(
             success=True,
             message="Receipt uploaded successfully",
@@ -92,7 +92,7 @@ async def upload_receipt(
             file_path=receipt.file_path,
             status=ReceiptStatus.UPLOADED,
         )
-        
+
     except AppException as e:
         raise HTTPException(
             status_code=e.status_code,
@@ -127,11 +127,11 @@ async def upload_batch(
     results = []
     storage_service = StorageService()
     receipt_service = ReceiptService()
-    
+
     for file in files:
         try:
             content = await file.read()
-            
+
             upload_result = await storage_service.upload_file(
                 company_id=x_company_id,
                 employee_id=x_employee_id,
@@ -139,7 +139,7 @@ async def upload_batch(
                 content=content,
                 content_type=file.content_type or "application/octet-stream",
             )
-            
+
             receipt_data = ReceiptCreate(
                 company_id=x_company_id,
                 employee_id=x_employee_id,
@@ -148,22 +148,26 @@ async def upload_batch(
                 file_size=upload_result["file_size"],
                 mime_type=upload_result["mime_type"],
             )
-            
+
             receipt = await receipt_service.create(receipt_data)
-            
-            results.append({
-                "filename": file.filename,
-                "success": True,
-                "receipt_id": receipt.id,
-            })
-            
+
+            results.append(
+                {
+                    "filename": file.filename,
+                    "success": True,
+                    "receipt_id": receipt.id,
+                }
+            )
+
         except Exception as e:
-            results.append({
-                "filename": file.filename,
-                "success": False,
-                "error": str(e),
-            })
-    
+            results.append(
+                {
+                    "filename": file.filename,
+                    "success": False,
+                    "error": str(e),
+                }
+            )
+
     return {
         "success": True,
         "uploaded": len([r for r in results if r["success"]]),

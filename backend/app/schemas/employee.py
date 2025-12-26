@@ -24,9 +24,7 @@ class EmployeeBase(BaseModel):
     email: EmailStr = Field(..., description="Employee email")
     name: str = Field(..., min_length=2, max_length=255, description="Full name")
     department: str | None = Field(None, max_length=100, description="Department")
-    employee_number: str | None = Field(
-        None, max_length=50, description="Internal employee ID"
-    )
+    employee_number: str | None = Field(None, max_length=50, description="Internal employee ID")
 
 
 class EmployeeCreate(EmployeeBase):

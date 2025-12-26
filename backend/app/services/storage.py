@@ -5,14 +5,12 @@ File upload handling with Supabase Storage.
 """
 
 import uuid
-from datetime import datetime, timezone
-from io import BytesIO
+from datetime import UTC, datetime
 from pathlib import Path
 
 from app.config import settings
 from app.core.exceptions import BadRequestException, StorageException
 from app.db.supabase import get_supabase_admin_client
-
 
 # Allowed file types
 ALLOWED_MIME_TYPES = {
@@ -74,7 +72,7 @@ class StorageService:
         allowed_extensions = ALLOWED_MIME_TYPES[content_type]
         if ext not in allowed_extensions:
             raise BadRequestException(
-                message=f"File extension doesn't match content type",
+                message="File extension doesn't match content type",
                 error_code="EXTENSION_MISMATCH",
             )
 
@@ -97,20 +95,18 @@ class StorageService:
         Returns:
             Unique file path
         """
-        date_prefix = datetime.now(timezone.utc).strftime("%Y/%m/%d")
+        date_prefix = datetime.now(UTC).strftime("%Y/%m/%d")
         unique_id = str(uuid.uuid4())[:8]
 
         # Sanitize filename
-        safe_filename = "".join(
-            c for c in filename if c.isalnum() or c in ".-_"
-        ).strip()
+        safe_filename = "".join(c for c in filename if c.isalnum() or c in ".-_").strip()
         if not safe_filename:
             safe_filename = "receipt"
 
         # Limit filename length
         if len(safe_filename) > 50:
             ext = Path(safe_filename).suffix
-            safe_filename = safe_filename[:50 - len(ext)] + ext
+            safe_filename = safe_filename[: 50 - len(ext)] + ext
 
         return f"{company_id}/{employee_id}/{date_prefix}/{unique_id}_{safe_filename}"
 
@@ -143,7 +139,7 @@ class StorageService:
 
         try:
             # Upload to Supabase Storage
-            result = self.client.storage.from_(self.bucket).upload(
+            self.client.storage.from_(self.bucket).upload(
                 path=file_path,
                 file=content,
                 file_options={"content-type": content_type},

@@ -4,11 +4,11 @@ Billing/Metering Service for tracking usage and fees.
 Handles audit counting, fee calculation, and usage tracking per company.
 """
 
-from typing import Any, Literal
+import logging
+import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-import uuid
-import logging
+from typing import Any, Literal
 
 from app.db.dependencies import get_supabase_client
 
@@ -21,19 +21,19 @@ BillingPeriod = Literal["daily", "weekly", "monthly"]
 class BillingService:
     """
     Service for tracking usage and calculating fees.
-    
+
     Tracks:
     - Number of audits performed
     - Credit/advance usage
     - Platform fees
     - Payout volumes
     """
-    
+
     # Fee configuration
     AUDIT_FEE_USD = Decimal("0.05")  # $0.05 per audit
     ADVANCE_FEE_BPS = 150  # 1.5% on advances
     PLATFORM_FEE_BPS = 50  # 0.5% on payouts
-    
+
     async def record_audit_usage(
         self,
         company_id: str,
@@ -43,18 +43,18 @@ class BillingService:
     ) -> dict[str, Any]:
         """
         Record an audit request for billing purposes.
-        
+
         Args:
             company_id: Company ID
             receipt_id: Associated receipt ID
             success: Whether the audit succeeded
             tokens_used: AI tokens consumed
-            
+
         Returns:
             Created usage record
         """
         client = get_supabase_client()
-        
+
         usage_data = {
             "id": str(uuid.uuid4()),
             "company_id": company_id,
@@ -69,15 +69,15 @@ class BillingService:
             },
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         result = client.table("usage_records").insert(usage_data).execute()
-        
+
         if result.data:
             logger.info(f"Audit usage recorded for company {company_id}")
             return result.data[0]
-        
+
         raise Exception("Failed to record audit usage")
-    
+
     async def record_payout_usage(
         self,
         company_id: str,
@@ -86,19 +86,19 @@ class BillingService:
     ) -> dict[str, Any]:
         """
         Record a payout for billing (platform fee calculation).
-        
+
         Args:
             company_id: Company ID
             payout_amount_usd: Payout amount
             receipt_id: Associated receipt ID
-            
+
         Returns:
             Created usage record
         """
         client = get_supabase_client()
-        
+
         platform_fee = (payout_amount_usd * self.PLATFORM_FEE_BPS) / 10000
-        
+
         usage_data = {
             "id": str(uuid.uuid4()),
             "company_id": company_id,
@@ -113,14 +113,14 @@ class BillingService:
             },
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         result = client.table("usage_records").insert(usage_data).execute()
-        
+
         if result.data:
             return result.data[0]
-        
+
         raise Exception("Failed to record payout usage")
-    
+
     async def record_advance_usage(
         self,
         company_id: str,
@@ -130,18 +130,18 @@ class BillingService:
     ) -> dict[str, Any]:
         """
         Record an advance for billing.
-        
+
         Args:
             company_id: Company ID
             advance_amount_usd: Advance principal
             fee_usd: Advance fee charged
             advance_id: Advance request ID
-            
+
         Returns:
             Created usage record
         """
         client = get_supabase_client()
-        
+
         usage_data = {
             "id": str(uuid.uuid4()),
             "company_id": company_id,
@@ -155,14 +155,14 @@ class BillingService:
             },
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         result = client.table("usage_records").insert(usage_data).execute()
-        
+
         if result.data:
             return result.data[0]
-        
+
         raise Exception("Failed to record advance usage")
-    
+
     async def get_company_usage(
         self,
         company_id: str,
@@ -172,22 +172,22 @@ class BillingService:
     ) -> dict[str, Any]:
         """
         Get usage summary for a company.
-        
+
         Args:
             company_id: Company ID
             period: Billing period
             start_date: Start of period (defaults to current period)
             end_date: End of period
-            
+
         Returns:
             Usage summary with totals by type
         """
         client = get_supabase_client()
-        
+
         # Calculate date range
         if not end_date:
             end_date = datetime.utcnow()
-        
+
         if not start_date:
             if period == "daily":
                 start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -196,7 +196,7 @@ class BillingService:
                 start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
             else:  # monthly
                 start_date = end_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        
+
         # Fetch usage records
         result = (
             client.table("usage_records")
@@ -206,9 +206,9 @@ class BillingService:
             .lte("created_at", end_date.isoformat())
             .execute()
         )
-        
+
         records = result.data or []
-        
+
         # Aggregate by type
         summary = {
             "company_id": company_id,
@@ -220,11 +220,11 @@ class BillingService:
             "advance": {"count": 0, "volume_usd": Decimal("0"), "fees_usd": Decimal("0")},
             "total_fees_usd": Decimal("0"),
         }
-        
+
         for record in records:
             usage_type = record.get("usage_type")
             total = Decimal(str(record.get("total_usd", 0)))
-            
+
             if usage_type == "audit":
                 summary["audit"]["count"] += 1
                 summary["audit"]["total_usd"] += total
@@ -236,9 +236,9 @@ class BillingService:
                 summary["advance"]["count"] += 1
                 summary["advance"]["volume_usd"] += Decimal(str(record.get("unit_price_usd", 0)))
                 summary["advance"]["fees_usd"] += total
-            
+
             summary["total_fees_usd"] += total
-        
+
         # Convert Decimals to floats
         summary["audit"]["total_usd"] = float(summary["audit"]["total_usd"])
         summary["payout"]["volume_usd"] = float(summary["payout"]["volume_usd"])
@@ -246,9 +246,9 @@ class BillingService:
         summary["advance"]["volume_usd"] = float(summary["advance"]["volume_usd"])
         summary["advance"]["fees_usd"] = float(summary["advance"]["fees_usd"])
         summary["total_fees_usd"] = float(summary["total_fees_usd"])
-        
+
         return summary
-    
+
     async def get_usage_records(
         self,
         company_id: str,
@@ -258,7 +258,7 @@ class BillingService:
     ) -> list[dict[str, Any]]:
         """Get detailed usage records for a company."""
         client = get_supabase_client()
-        
+
         query = (
             client.table("usage_records")
             .select("*")
@@ -266,13 +266,13 @@ class BillingService:
             .order("created_at", desc=True)
             .range(offset, offset + limit - 1)
         )
-        
+
         if usage_type:
             query = query.eq("usage_type", usage_type)
-        
+
         result = query.execute()
         return result.data or []
-    
+
     async def generate_invoice(
         self,
         company_id: str,
@@ -281,24 +281,24 @@ class BillingService:
     ) -> dict[str, Any]:
         """
         Generate an invoice for a billing period.
-        
+
         Args:
             company_id: Company ID
             period_start: Start of billing period
             period_end: End of billing period
-            
+
         Returns:
             Invoice data with line items
         """
         client = get_supabase_client()
-        
+
         # Get usage for period
         usage = await self.get_company_usage(
             company_id=company_id,
             start_date=period_start,
             end_date=period_end,
         )
-        
+
         # Build invoice
         invoice = {
             "id": str(uuid.uuid4()),
@@ -310,41 +310,47 @@ class BillingService:
             "subtotal_usd": 0,
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         # Add line items
         if usage["audit"]["count"] > 0:
-            invoice["line_items"].append({
-                "description": f"Receipt Audits ({usage['audit']['count']} audits)",
-                "quantity": usage["audit"]["count"],
-                "unit_price_usd": float(self.AUDIT_FEE_USD),
-                "total_usd": usage["audit"]["total_usd"],
-            })
+            invoice["line_items"].append(
+                {
+                    "description": f"Receipt Audits ({usage['audit']['count']} audits)",
+                    "quantity": usage["audit"]["count"],
+                    "unit_price_usd": float(self.AUDIT_FEE_USD),
+                    "total_usd": usage["audit"]["total_usd"],
+                }
+            )
             invoice["subtotal_usd"] += usage["audit"]["total_usd"]
-        
+
         if usage["payout"]["count"] > 0:
-            invoice["line_items"].append({
-                "description": f"Platform Fee on Payouts (${usage['payout']['volume_usd']:.2f} volume)",
-                "quantity": usage["payout"]["count"],
-                "unit_price_usd": None,
-                "total_usd": usage["payout"]["fees_usd"],
-            })
+            invoice["line_items"].append(
+                {
+                    "description": f"Platform Fee on Payouts (${usage['payout']['volume_usd']:.2f} volume)",
+                    "quantity": usage["payout"]["count"],
+                    "unit_price_usd": None,
+                    "total_usd": usage["payout"]["fees_usd"],
+                }
+            )
             invoice["subtotal_usd"] += usage["payout"]["fees_usd"]
-        
+
         if usage["advance"]["count"] > 0:
-            invoice["line_items"].append({
-                "description": f"Advance Fees (${usage['advance']['volume_usd']:.2f} advanced)",
-                "quantity": usage["advance"]["count"],
-                "unit_price_usd": None,
-                "total_usd": usage["advance"]["fees_usd"],
-            })
+            invoice["line_items"].append(
+                {
+                    "description": f"Advance Fees (${usage['advance']['volume_usd']:.2f} advanced)",
+                    "quantity": usage["advance"]["count"],
+                    "unit_price_usd": None,
+                    "total_usd": usage["advance"]["fees_usd"],
+                }
+            )
             invoice["subtotal_usd"] += usage["advance"]["fees_usd"]
-        
+
         # Store invoice
         result = client.table("invoices").insert(invoice).execute()
-        
+
         if result.data:
             return result.data[0]
-        
+
         return invoice
 
 

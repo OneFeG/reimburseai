@@ -22,11 +22,11 @@ from app.schemas.employee import (
     EmployeeUpdate,
 )
 from app.schemas.receipt import (
+    AuditResult,
     ReceiptCreate,
     ReceiptResponse,
     ReceiptUpdate,
     ReceiptUploadResponse,
-    AuditResult,
 )
 
 __all__ = [

@@ -2,11 +2,12 @@
 Advance API endpoints for employee expense advances.
 """
 
+import logging
+from decimal import Decimal
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Any, Literal
-from decimal import Decimal
-import logging
 
 from app.services.advance import advance_service
 
@@ -17,6 +18,7 @@ router = APIRouter(prefix="/advance", tags=["advance"])
 
 class AdvanceConfigUpdate(BaseModel):
     """Request body for updating advance configuration."""
+
     credit_limit_usd: float | None = Field(None, gt=0, description="Credit limit in USD")
     fee_bps: int | None = Field(None, ge=0, le=10000, description="Fee in basis points (1% = 100)")
     enabled: bool | None = Field(None, description="Whether advances are enabled")
@@ -24,6 +26,7 @@ class AdvanceConfigUpdate(BaseModel):
 
 class AdvanceConfigResponse(BaseModel):
     """Advance configuration response."""
+
     company_id: str
     credit_limit_usd: float
     utilization_usd: float
@@ -34,6 +37,7 @@ class AdvanceConfigResponse(BaseModel):
 
 class AdvanceRequest(BaseModel):
     """Request body for requesting an advance."""
+
     company_id: str = Field(..., description="Company ID")
     employee_id: str = Field(..., description="Employee ID")
     amount_usd: float = Field(..., gt=0, description="Requested amount in USD")
@@ -42,6 +46,7 @@ class AdvanceRequest(BaseModel):
 
 class AdvanceDecisionResponse(BaseModel):
     """Response for advance request decision."""
+
     approved: bool
     reason: str | None = None
     advance_id: str | None = None
@@ -53,6 +58,7 @@ class AdvanceDecisionResponse(BaseModel):
 
 class AdvanceResponse(BaseModel):
     """Advance record response."""
+
     id: str
     company_id: str
     employee_id: str
@@ -69,16 +75,16 @@ class AdvanceResponse(BaseModel):
 async def get_advance_config(company_id: str):
     """
     Get advance configuration for a company.
-    
+
     Returns credit limit, current utilization, fee structure, and enabled status.
     """
     config = await advance_service.get_company_advance_config(company_id)
-    
+
     # Calculate available credit
     credit_limit = config.get("credit_limit_usd", 0)
     utilization = config.get("utilization_usd", 0)
     available = credit_limit - utilization
-    
+
     return AdvanceConfigResponse(
         company_id=company_id,
         credit_limit_usd=config.get("credit_limit_usd", advance_service.DEFAULT_CREDIT_LIMIT_USD),
@@ -93,7 +99,7 @@ async def get_advance_config(company_id: str):
 async def update_advance_config(company_id: str, body: AdvanceConfigUpdate):
     """
     Update advance configuration for a company.
-    
+
     Allows setting credit limit, fee structure, and enabling/disabling advances.
     """
     try:
@@ -103,12 +109,12 @@ async def update_advance_config(company_id: str, body: AdvanceConfigUpdate):
             fee_bps=body.fee_bps,
             enabled=body.enabled,
         )
-        
+
         # Calculate available credit
         credit_limit = config.get("credit_limit_usd", 0)
         utilization = config.get("utilization_usd", 0)
         available = credit_limit - utilization
-        
+
         return AdvanceConfigResponse(
             company_id=company_id,
             credit_limit_usd=config["credit_limit_usd"],
@@ -126,7 +132,7 @@ async def update_advance_config(company_id: str, body: AdvanceConfigUpdate):
 async def request_advance(body: AdvanceRequest):
     """
     Request an advance for an employee.
-    
+
     Returns the decision (approved/rejected) along with fee calculation
     if approved. Advances are subject to the company's credit limit and
     fee structure.
@@ -138,7 +144,7 @@ async def request_advance(body: AdvanceRequest):
             amount_usd=Decimal(str(body.amount_usd)),
             reason=body.reason,
         )
-        
+
         if result["approved"]:
             return AdvanceDecisionResponse(
                 approved=True,
@@ -174,7 +180,7 @@ async def update_advance_status(
 ):
     """
     Update the status of an advance.
-    
+
     When marked as 'settled', the credit utilization is reduced.
     """
     try:

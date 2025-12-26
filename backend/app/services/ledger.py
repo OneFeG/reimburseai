@@ -4,11 +4,11 @@ Ledger Service for tracking all financial transactions.
 Manages the ledger of all advances, payouts, and company transactions.
 """
 
-from typing import Any, Literal
+import logging
+import uuid
 from datetime import datetime
 from decimal import Decimal
-import uuid
-import logging
+from typing import Any, Literal
 
 from app.db.dependencies import get_supabase_client
 
@@ -22,14 +22,14 @@ LedgerEntryStatus = Literal["pending", "processing", "settled", "failed", "cance
 class LedgerService:
     """
     Service for managing the financial ledger.
-    
+
     Tracks all money movement including:
     - Employee advances (pre-expense funding)
     - Receipt payouts (reimbursements)
     - Fee collections
     - Company deposits
     """
-    
+
     async def create_entry(
         self,
         company_id: str,
@@ -43,7 +43,7 @@ class LedgerService:
     ) -> dict[str, Any]:
         """
         Create a new ledger entry.
-        
+
         Args:
             company_id: Company ID
             employee_id: Employee ID (if applicable)
@@ -53,12 +53,12 @@ class LedgerService:
             reference_id: ID of related entity (receipt, advance request, etc.)
             reference_type: Type of reference ("receipt", "advance_request", etc.)
             metadata: Additional metadata
-            
+
         Returns:
             Created ledger entry
         """
         client = get_supabase_client()
-        
+
         entry_data = {
             "id": str(uuid.uuid4()),
             "company_id": company_id,
@@ -72,18 +72,17 @@ class LedgerService:
             "metadata": metadata or {},
             "created_at": datetime.utcnow().isoformat(),
         }
-        
+
         result = client.table("ledger_entries").insert(entry_data).execute()
-        
+
         if result.data:
             logger.info(
-                f"Ledger entry created: {entry_type} ${amount_usd} "
-                f"for company {company_id}"
+                f"Ledger entry created: {entry_type} ${amount_usd} for company {company_id}"
             )
             return result.data[0]
-        
+
         raise Exception("Failed to create ledger entry")
-    
+
     async def update_status(
         self,
         entry_id: str,
@@ -93,59 +92,48 @@ class LedgerService:
     ) -> dict[str, Any]:
         """
         Update the status of a ledger entry.
-        
+
         Args:
             entry_id: Ledger entry ID
             status: New status
             transaction_hash: Blockchain transaction hash (if applicable)
             error_message: Error message (if failed)
-            
+
         Returns:
             Updated ledger entry
         """
         client = get_supabase_client()
-        
+
         update_data: dict[str, Any] = {
             "status": status,
             "updated_at": datetime.utcnow().isoformat(),
         }
-        
+
         if transaction_hash:
             update_data["transaction_hash"] = transaction_hash
-        
+
         if error_message:
             update_data["error_message"] = error_message
-        
+
         if status == "settled":
             update_data["settled_at"] = datetime.utcnow().isoformat()
-        
-        result = (
-            client.table("ledger_entries")
-            .update(update_data)
-            .eq("id", entry_id)
-            .execute()
-        )
-        
+
+        result = client.table("ledger_entries").update(update_data).eq("id", entry_id).execute()
+
         if result.data:
             logger.info(f"Ledger entry {entry_id} updated to status: {status}")
             return result.data[0]
-        
+
         raise Exception(f"Failed to update ledger entry {entry_id}")
-    
+
     async def get_entry(self, entry_id: str) -> dict[str, Any] | None:
         """Get a ledger entry by ID."""
         client = get_supabase_client()
-        
-        result = (
-            client.table("ledger_entries")
-            .select("*")
-            .eq("id", entry_id)
-            .single()
-            .execute()
-        )
-        
+
+        result = client.table("ledger_entries").select("*").eq("id", entry_id).single().execute()
+
         return result.data
-    
+
     async def get_company_ledger(
         self,
         company_id: str,
@@ -156,19 +144,19 @@ class LedgerService:
     ) -> list[dict[str, Any]]:
         """
         Get ledger entries for a company.
-        
+
         Args:
             company_id: Company ID
             limit: Maximum entries to return
             offset: Pagination offset
             entry_type: Filter by entry type
             status: Filter by status
-            
+
         Returns:
             List of ledger entries
         """
         client = get_supabase_client()
-        
+
         query = (
             client.table("ledger_entries")
             .select("*")
@@ -176,16 +164,16 @@ class LedgerService:
             .order("created_at", desc=True)
             .range(offset, offset + limit - 1)
         )
-        
+
         if entry_type:
             query = query.eq("entry_type", entry_type)
-        
+
         if status:
             query = query.eq("status", status)
-        
+
         result = query.execute()
         return result.data or []
-    
+
     async def get_employee_ledger(
         self,
         employee_id: str,
@@ -194,7 +182,7 @@ class LedgerService:
     ) -> list[dict[str, Any]]:
         """Get ledger entries for an employee."""
         client = get_supabase_client()
-        
+
         result = (
             client.table("ledger_entries")
             .select("*")
@@ -203,20 +191,20 @@ class LedgerService:
             .range(offset, offset + limit - 1)
             .execute()
         )
-        
+
         return result.data or []
-    
+
     async def get_company_summary(
         self,
         company_id: str,
     ) -> dict[str, Any]:
         """
         Get a financial summary for a company.
-        
+
         Returns total amounts by type and status.
         """
         client = get_supabase_client()
-        
+
         # Get all entries for the company
         result = (
             client.table("ledger_entries")
@@ -224,9 +212,9 @@ class LedgerService:
             .eq("company_id", company_id)
             .execute()
         )
-        
+
         entries = result.data or []
-        
+
         summary = {
             "total_payouts": Decimal("0"),
             "total_advances": Decimal("0"),
@@ -235,25 +223,25 @@ class LedgerService:
             "settled_amount": Decimal("0"),
             "entry_count": len(entries),
         }
-        
+
         for entry in entries:
             amount = Decimal(str(entry.get("amount_usd", 0)))
             fee = Decimal(str(entry.get("fee_usd", 0)))
             entry_type = entry.get("entry_type")
             status = entry.get("status")
-            
+
             if entry_type == "payout":
                 summary["total_payouts"] += amount
             elif entry_type == "advance":
                 summary["total_advances"] += amount
-            
+
             summary["total_fees"] += fee
-            
+
             if status == "pending":
                 summary["pending_amount"] += amount
             elif status == "settled":
                 summary["settled_amount"] += amount
-        
+
         # Convert Decimals to floats for JSON serialization
         return {k: float(v) if isinstance(v, Decimal) else v for k, v in summary.items()}
 

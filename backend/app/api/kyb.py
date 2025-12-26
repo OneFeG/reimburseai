@@ -2,10 +2,11 @@
 KYB (Know Your Business) API endpoints for company verification.
 """
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field, EmailStr
-from typing import Any, Literal
 import logging
+from typing import Any, Literal
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, EmailStr, Field
 
 from app.services.kyb import kyb_service
 
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/kyb", tags=["kyb"])
 
 class KYBSubmissionRequest(BaseModel):
     """Request body for KYB submission."""
+
     company_id: str = Field(..., description="Company ID")
     company_name: str = Field(..., min_length=2, description="Legal company name")
     registration_number: str | None = Field(None, description="Business registration number")
@@ -25,18 +27,22 @@ class KYBSubmissionRequest(BaseModel):
     address: str | None = Field(None, description="Business address")
     business_type: str | None = Field(None, description="Type of business")
     tax_id: str | None = Field(None, description="Tax identification number")
-    bank_account_last4: str | None = Field(None, max_length=4, description="Last 4 digits of bank account")
+    bank_account_last4: str | None = Field(
+        None, max_length=4, description="Last 4 digits of bank account"
+    )
     documents: list[str] | None = Field(None, description="List of document file paths")
 
 
 class KYBStatusUpdate(BaseModel):
     """Request body for updating KYB status (admin)."""
+
     status: Literal["pending", "approved", "rejected", "under_review"]
     reviewer_notes: str | None = None
 
 
 class KYBStatusResponse(BaseModel):
     """KYB status response."""
+
     company_id: str
     status: str
     data: dict[str, Any]
@@ -49,6 +55,7 @@ class KYBStatusResponse(BaseModel):
 
 class KYBSubmissionResponse(BaseModel):
     """KYB submission response."""
+
     id: str
     company_id: str
     status: str
@@ -59,7 +66,7 @@ class KYBSubmissionResponse(BaseModel):
 async def get_kyb_status(company_id: str):
     """
     Get KYB verification status for a company.
-    
+
     Returns the current status and submitted data.
     """
     result = await kyb_service.get_kyb_status(company_id)
@@ -79,7 +86,7 @@ async def get_kyb_status(company_id: str):
 async def submit_kyb(body: KYBSubmissionRequest):
     """
     Submit KYB verification data.
-    
+
     Companies must submit KYB data to be verified before using
     the full features of the platform.
     """
@@ -97,7 +104,7 @@ async def submit_kyb(body: KYBSubmissionRequest):
             bank_account_last4=body.bank_account_last4,
             documents=body.documents,
         )
-        
+
         return KYBSubmissionResponse(
             id=result["id"],
             company_id=body.company_id,
@@ -115,7 +122,7 @@ async def submit_kyb(body: KYBSubmissionRequest):
 async def update_kyb_status(submission_id: str, body: KYBStatusUpdate):
     """
     Update KYB submission status (admin operation).
-    
+
     Used by admins to approve or reject KYB submissions.
     """
     try:
@@ -124,7 +131,7 @@ async def update_kyb_status(submission_id: str, body: KYBStatusUpdate):
             status=body.status,
             reviewer_notes=body.reviewer_notes,
         )
-        
+
         return KYBStatusResponse(
             company_id=result["company_id"],
             status=result["status"],
@@ -144,7 +151,7 @@ async def update_kyb_status(submission_id: str, body: KYBStatusUpdate):
 async def check_kyb_verified(company_id: str):
     """
     Check if a company is KYB verified.
-    
+
     Returns a simple boolean response.
     """
     is_verified = await kyb_service.is_company_verified(company_id)
@@ -155,11 +162,11 @@ async def check_kyb_verified(company_id: str):
 async def get_pending_submissions(limit: int = Query(100, ge=1, le=500)):
     """
     Get all pending KYB submissions (admin operation).
-    
+
     Returns submissions in order of creation (oldest first).
     """
     submissions = await kyb_service.get_pending_submissions(limit=limit)
-    
+
     return [
         KYBStatusResponse(
             company_id=s["company_id"],

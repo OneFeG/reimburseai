@@ -6,7 +6,7 @@ Business logic for expense policy operations.
 
 from supabase import Client
 
-from app.core.exceptions import ConflictException, NotFoundException
+from app.core.exceptions import NotFoundException
 from app.db.supabase import get_supabase_admin_client
 from app.schemas.policy import (
     PolicyCreate,
@@ -35,14 +35,12 @@ class PolicyService:
         """
         # If this is active, deactivate other policies for this company
         if True:  # New policies are active by default
-            self.client.table(self.table).update(
-                {"is_active": False}
-            ).eq("company_id", data.company_id).execute()
+            self.client.table(self.table).update({"is_active": False}).eq(
+                "company_id", data.company_id
+            ).execute()
 
         result = (
-            self.client.table(self.table)
-            .insert({**data.model_dump(), "is_active": True})
-            .execute()
+            self.client.table(self.table).insert({**data.model_dump(), "is_active": True}).execute()
         )
 
         return PolicyResponse(**result.data[0])
@@ -60,12 +58,7 @@ class PolicyService:
         Raises:
             NotFoundException: If policy not found
         """
-        result = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("id", policy_id)
-            .execute()
-        )
+        result = self.client.table(self.table).select("*").eq("id", policy_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -104,9 +97,7 @@ class PolicyService:
 
         return PolicyResponse(**result.data[0])
 
-    async def update(
-        self, policy_id: str, data: PolicyUpdate
-    ) -> PolicyResponse:
+    async def update(self, policy_id: str, data: PolicyUpdate) -> PolicyResponse:
         """
         Update policy details.
 
@@ -128,16 +119,11 @@ class PolicyService:
 
         # If activating this policy, deactivate others
         if update_data.get("is_active"):
-            self.client.table(self.table).update(
-                {"is_active": False}
-            ).eq("company_id", current.company_id).neq("id", policy_id).execute()
+            self.client.table(self.table).update({"is_active": False}).eq(
+                "company_id", current.company_id
+            ).neq("id", policy_id).execute()
 
-        result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", policy_id)
-            .execute()
-        )
+        result = self.client.table(self.table).update(update_data).eq("id", policy_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -147,9 +133,7 @@ class PolicyService:
 
         return PolicyResponse(**result.data[0])
 
-    async def list_by_company(
-        self, company_id: str
-    ) -> list[PolicyResponse]:
+    async def list_by_company(self, company_id: str) -> list[PolicyResponse]:
         """
         List all policies for a company.
 
@@ -179,12 +163,7 @@ class PolicyService:
         Returns:
             True if deleted
         """
-        result = (
-            self.client.table(self.table)
-            .delete()
-            .eq("id", policy_id)
-            .execute()
-        )
+        result = self.client.table(self.table).delete().eq("id", policy_id).execute()
 
         return len(result.data) > 0
 

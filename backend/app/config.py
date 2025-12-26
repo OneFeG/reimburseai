@@ -46,7 +46,9 @@ class Settings(BaseSettings):
     # Blockchain - Avalanche Network Configuration
     # Testnet (Fuji): chain_id=43113, use_mainnet=False
     # Mainnet (C-Chain): chain_id=43114, use_mainnet=True
-    use_mainnet: bool = Field(default=False, description="Use Avalanche mainnet instead of Fuji testnet")
+    use_mainnet: bool = Field(
+        default=False, description="Use Avalanche mainnet instead of Fuji testnet"
+    )
     avalanche_rpc_url: str = Field(default="https://api.avax-test.network/ext/bc/C/rpc")
     chain_id: int = Field(default=43113)
 

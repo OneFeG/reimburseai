@@ -4,7 +4,7 @@ Health Check Endpoints
 Basic health and readiness checks.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -23,7 +23,7 @@ async def health_check():
         "status": "healthy",
         "service": settings.app_name,
         "version": "1.0.0",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -40,6 +40,7 @@ async def readiness_check():
     # Check Supabase connection
     try:
         from app.db.supabase import get_supabase_admin_client
+
         client = get_supabase_admin_client()
         # Simple query to test connection
         client.table("companies").select("id").limit(1).execute()
@@ -50,6 +51,7 @@ async def readiness_check():
     # Check storage
     try:
         from app.db.supabase import get_storage_client
+
         storage = get_storage_client()
         storage.list_buckets()
         checks["storage"] = True
@@ -61,5 +63,5 @@ async def readiness_check():
     return {
         "status": "ready" if all_healthy else "degraded",
         "checks": checks,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }

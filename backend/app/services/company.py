@@ -4,7 +4,7 @@ Company Service
 Business logic for company operations.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from supabase import Client
@@ -42,12 +42,7 @@ class CompanyService:
             ConflictException: If slug or email already exists
         """
         # Check if slug exists
-        existing = (
-            self.client.table(self.table)
-            .select("id")
-            .eq("slug", data.slug)
-            .execute()
-        )
+        existing = self.client.table(self.table).select("id").eq("slug", data.slug).execute()
         if existing.data:
             raise ConflictException(
                 message=f"Company with slug '{data.slug}' already exists",
@@ -56,10 +51,7 @@ class CompanyService:
 
         # Check if email exists
         existing_email = (
-            self.client.table(self.table)
-            .select("id")
-            .eq("email", data.email)
-            .execute()
+            self.client.table(self.table).select("id").eq("email", data.email).execute()
         )
         if existing_email.data:
             raise ConflictException(
@@ -68,11 +60,7 @@ class CompanyService:
             )
 
         # Create company
-        result = (
-            self.client.table(self.table)
-            .insert(data.model_dump())
-            .execute()
-        )
+        result = self.client.table(self.table).insert(data.model_dump()).execute()
 
         return CompanyResponse(**result.data[0])
 
@@ -89,12 +77,7 @@ class CompanyService:
         Raises:
             NotFoundException: If company not found
         """
-        result = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("id", company_id)
-            .execute()
-        )
+        result = self.client.table(self.table).select("*").eq("id", company_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -117,12 +100,7 @@ class CompanyService:
         Raises:
             NotFoundException: If company not found
         """
-        result = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("slug", slug)
-            .execute()
-        )
+        result = self.client.table(self.table).select("*").eq("slug", slug).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -132,9 +110,7 @@ class CompanyService:
 
         return CompanyResponse(**result.data[0])
 
-    async def update(
-        self, company_id: str, data: CompanyUpdate
-    ) -> CompanyResponse:
+    async def update(self, company_id: str, data: CompanyUpdate) -> CompanyResponse:
         """
         Update company details.
 
@@ -151,12 +127,7 @@ class CompanyService:
         if not update_data:
             return await self.get_by_id(company_id)
 
-        result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", company_id)
-            .execute()
-        )
+        result = self.client.table(self.table).update(update_data).eq("id", company_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -180,14 +151,11 @@ class CompanyService:
         update_data = {
             "vault_address": data.vault_address,
             "vault_chain_id": data.chain_id,
-            "vault_deployed_at": datetime.now(timezone.utc).isoformat(),
+            "vault_deployed_at": datetime.now(UTC).isoformat(),
         }
 
         result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", data.company_id)
-            .execute()
+            self.client.table(self.table).update(update_data).eq("id", data.company_id).execute()
         )
 
         if not result.data:
@@ -198,21 +166,14 @@ class CompanyService:
 
         return CompanyResponse(**result.data[0])
 
-    async def update_status(
-        self, company_id: str, status: str
-    ) -> CompanyResponse:
+    async def update_status(self, company_id: str, status: str) -> CompanyResponse:
         """Update company verification status."""
         update_data: dict[str, Any] = {"status": status}
 
         if status == "verified":
-            update_data["kyb_verified_at"] = datetime.now(timezone.utc).isoformat()
+            update_data["kyb_verified_at"] = datetime.now(UTC).isoformat()
 
-        result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", company_id)
-            .execute()
-        )
+        result = self.client.table(self.table).update(update_data).eq("id", company_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -258,13 +219,11 @@ class CompanyService:
 
         # Calculate spend
         all_time = sum(
-            r["amount"] or 0
-            for r in receipts.data
-            if r["status"] in ["approved", "paid"]
+            r["amount"] or 0 for r in receipts.data if r["status"] in ["approved", "paid"]
         )
 
         # This month's spend
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         month_spend = sum(
             r["amount"] or 0
@@ -284,9 +243,7 @@ class CompanyService:
             total_spend_all_time=all_time,
         )
 
-    async def list_all(
-        self, page: int = 1, limit: int = 20
-    ) -> tuple[list[CompanyResponse], int]:
+    async def list_all(self, page: int = 1, limit: int = 20) -> tuple[list[CompanyResponse], int]:
         """
         List all companies (admin only).
 
@@ -300,11 +257,7 @@ class CompanyService:
         offset = (page - 1) * limit
 
         # Get total count
-        count_result = (
-            self.client.table(self.table)
-            .select("id", count="exact")
-            .execute()
-        )
+        count_result = self.client.table(self.table).select("id", count="exact").execute()
         total = count_result.count or 0
 
         # Get paginated data

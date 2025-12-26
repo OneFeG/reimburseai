@@ -27,7 +27,7 @@ router = APIRouter()
 async def create_employee(data: EmployeeCreate):
     """
     Create a new employee for a company.
-    
+
     The employee will be in 'pending' status until approved by admin.
     Wallet address can be added later when the employee connects their wallet.
     """
@@ -111,9 +111,7 @@ async def list_by_company(
     """List all employees for a company."""
     try:
         service = EmployeeService()
-        employees, total = await service.list_by_company(
-            company_id, page, limit, status
-        )
+        employees, total = await service.list_by_company(company_id, page, limit, status)
         return {
             "success": True,
             "data": employees,

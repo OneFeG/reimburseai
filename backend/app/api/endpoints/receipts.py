@@ -51,10 +51,10 @@ async def get_receipt_image_url(
     try:
         receipt_service = ReceiptService()
         storage_service = StorageService()
-        
+
         receipt = await receipt_service.get_by_id(receipt_id)
         url = await storage_service.get_signed_url(receipt.file_path, expires_in)
-        
+
         return {
             "success": True,
             "url": url,
@@ -104,14 +104,14 @@ async def update_status(receipt_id: str, status: ReceiptStatus):
 async def apply_audit(receipt_id: str, audit: AuditResult):
     """
     Apply AI audit results to a receipt.
-    
+
     This endpoint is called after the Auditor Agent completes its analysis.
     It updates the receipt with:
     - Extracted data (merchant, amount, date)
     - AI confidence score
     - Decision reason
     - Any detected anomalies
-    
+
     The receipt status is automatically set based on the audit result.
     """
     try:
@@ -152,7 +152,7 @@ async def record_audit_fee(
 async def record_payout(receipt_id: str, data: ReceiptPayoutRequest):
     """
     Record payout completion.
-    
+
     Called after the Treasury sends USDC to the employee's wallet.
     This updates the receipt status to 'paid' and creates a ledger entry.
     """
@@ -166,7 +166,7 @@ async def record_payout(receipt_id: str, data: ReceiptPayoutRequest):
             amount=data.amount,
             wallet_address=data.wallet_address,
         )
-        
+
         return ReceiptPayoutResponse(
             success=True,
             receipt_id=receipt.id,
@@ -192,9 +192,7 @@ async def list_by_company(
     """List all receipts for a company."""
     try:
         service = ReceiptService()
-        receipts, total = await service.list_by_company(
-            company_id, page, limit, status
-        )
+        receipts, total = await service.list_by_company(company_id, page, limit, status)
         return {
             "success": True,
             "data": receipts,
@@ -222,9 +220,7 @@ async def list_by_employee(
     """List all receipts for an employee."""
     try:
         service = ReceiptService()
-        receipts, total = await service.list_by_employee(
-            employee_id, page, limit, status
-        )
+        receipts, total = await service.list_by_employee(employee_id, page, limit, status)
         return {
             "success": True,
             "data": receipts,

@@ -24,17 +24,22 @@ async def lifespan(app: FastAPI):
     # Startup
     print(f"🚀 Starting {settings.app_name}...")
     print(f"📦 Environment: {settings.app_env}")
-    print(f"🔗 Supabase URL: {settings.supabase_url[:30]}..." if settings.supabase_url else "⚠️ Supabase URL not configured")
-    
+    print(
+        f"🔗 Supabase URL: {settings.supabase_url[:30]}..."
+        if settings.supabase_url
+        else "⚠️ Supabase URL not configured"
+    )
+
     # Initialize storage bucket
     try:
         from app.db.supabase import init_storage_bucket
+
         init_storage_bucket()
     except Exception as e:
         print(f"⚠️ Storage initialization warning: {e}")
-    
+
     yield
-    
+
     # Shutdown
     print("👋 Shutting down...")
 
@@ -44,22 +49,22 @@ app = FastAPI(
     title="Reimburse.ai API",
     description="""
     ## AI-Powered Expense Reimbursement Platform
-    
+
     This API provides the backend for Reimburse.ai, enabling:
-    
+
     - **Receipt Upload**: Employees upload expense receipts
     - **AI Auditing**: Automated receipt verification via x402 protocol
     - **Instant Settlement**: USDC payouts on Avalanche
     - **Multi-Tenant**: Company-isolated data with Row Level Security
-    
+
     ### Architecture
-    
+
     ```
     Employee → Upload API → Storage → Auditor (x402) → Treasury → USDC Payout
     ```
-    
+
     ### Authentication
-    
+
     Most endpoints require these headers:
     - `X-Company-ID`: Company UUID
     - `X-Employee-ID`: Employee UUID (for employee actions)
@@ -111,7 +116,7 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "app.main:app",
         host=settings.host,

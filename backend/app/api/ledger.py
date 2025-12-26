@@ -2,14 +2,14 @@
 Ledger API endpoints for financial transaction tracking.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field
-from typing import Any, Literal
-from decimal import Decimal
 import logging
+from decimal import Decimal
+from typing import Any, Literal
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from app.services.ledger import ledger_service
-from app.db.dependencies import get_supabase_client
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ router = APIRouter(prefix="/ledger", tags=["ledger"])
 
 class LedgerEntryCreate(BaseModel):
     """Request body for creating a ledger entry."""
+
     company_id: str = Field(..., description="Company ID")
     employee_id: str | None = Field(None, description="Employee ID")
     amount_usd: float = Field(..., gt=0, description="Transaction amount in USD")
@@ -32,6 +33,7 @@ class LedgerEntryCreate(BaseModel):
 
 class LedgerEntryUpdate(BaseModel):
     """Request body for updating ledger entry status."""
+
     status: Literal["pending", "processing", "settled", "failed", "cancelled"]
     transaction_hash: str | None = None
     error_message: str | None = None
@@ -39,6 +41,7 @@ class LedgerEntryUpdate(BaseModel):
 
 class LedgerEntryResponse(BaseModel):
     """Ledger entry response."""
+
     id: str
     company_id: str
     employee_id: str | None
@@ -57,6 +60,7 @@ class LedgerEntryResponse(BaseModel):
 
 class LedgerSummaryResponse(BaseModel):
     """Company ledger summary response."""
+
     total_payouts: float
     total_advances: float
     total_fees: float
@@ -69,7 +73,7 @@ class LedgerSummaryResponse(BaseModel):
 async def create_ledger_entry(body: LedgerEntryCreate):
     """
     Create a new ledger entry.
-    
+
     Used to track all financial transactions including advances,
     payouts, fees, and deposits.
     """
@@ -103,7 +107,7 @@ async def get_ledger_entry(entry_id: str):
 async def update_ledger_entry(entry_id: str, body: LedgerEntryUpdate):
     """
     Update a ledger entry's status.
-    
+
     Used to mark entries as settled, failed, or cancelled.
     """
     try:
@@ -129,7 +133,7 @@ async def get_company_ledger(
 ):
     """
     Get all ledger entries for a company.
-    
+
     Supports filtering by entry type and status.
     """
     entries = await ledger_service.get_company_ledger(
@@ -146,7 +150,7 @@ async def get_company_ledger(
 async def get_company_ledger_summary(company_id: str):
     """
     Get a financial summary for a company.
-    
+
     Returns aggregated totals by transaction type and status.
     """
     summary = await ledger_service.get_company_summary(company_id)

@@ -4,12 +4,12 @@ Receipt Service
 Business logic for receipt operations.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from supabase import Client
 
-from app.core.exceptions import BadRequestException, NotFoundException
+from app.core.exceptions import NotFoundException
 from app.db.supabase import get_supabase_admin_client
 from app.schemas.receipt import (
     AuditResult,
@@ -38,11 +38,7 @@ class ReceiptService:
         Returns:
             Created receipt
         """
-        result = (
-            self.client.table(self.table)
-            .insert(data.model_dump())
-            .execute()
-        )
+        result = self.client.table(self.table).insert(data.model_dump()).execute()
 
         return ReceiptResponse(**result.data[0])
 
@@ -59,12 +55,7 @@ class ReceiptService:
         Raises:
             NotFoundException: If receipt not found
         """
-        result = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("id", receipt_id)
-            .execute()
-        )
+        result = self.client.table(self.table).select("*").eq("id", receipt_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -74,9 +65,7 @@ class ReceiptService:
 
         return ReceiptResponse(**result.data[0])
 
-    async def update(
-        self, receipt_id: str, data: ReceiptUpdate
-    ) -> ReceiptResponse:
+    async def update(self, receipt_id: str, data: ReceiptUpdate) -> ReceiptResponse:
         """
         Update receipt details.
 
@@ -93,12 +82,7 @@ class ReceiptService:
         if not update_data:
             return await self.get_by_id(receipt_id)
 
-        result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", receipt_id)
-            .execute()
-        )
+        result = self.client.table(self.table).update(update_data).eq("id", receipt_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -108,9 +92,7 @@ class ReceiptService:
 
         return ReceiptResponse(**result.data[0])
 
-    async def update_status(
-        self, receipt_id: str, status: ReceiptStatus
-    ) -> ReceiptResponse:
+    async def update_status(self, receipt_id: str, status: ReceiptStatus) -> ReceiptResponse:
         """
         Update receipt status.
 
@@ -136,9 +118,7 @@ class ReceiptService:
 
         return ReceiptResponse(**result.data[0])
 
-    async def apply_audit_result(
-        self, receipt_id: str, audit: AuditResult
-    ) -> ReceiptResponse:
+    async def apply_audit_result(self, receipt_id: str, audit: AuditResult) -> ReceiptResponse:
         """
         Apply AI audit results to a receipt.
 
@@ -177,12 +157,7 @@ class ReceiptService:
         if audit.currency:
             update_data["currency"] = audit.currency
 
-        result = (
-            self.client.table(self.table)
-            .update(update_data)
-            .eq("id", receipt_id)
-            .execute()
-        )
+        result = self.client.table(self.table).update(update_data).eq("id", receipt_id).execute()
 
         if not result.data:
             raise NotFoundException(
@@ -211,11 +186,13 @@ class ReceiptService:
         """
         result = (
             self.client.table(self.table)
-            .update({
-                "audit_fee_paid": True,
-                "audit_fee_tx_hash": tx_hash,
-                "audit_fee_amount": amount,
-            })
+            .update(
+                {
+                    "audit_fee_paid": True,
+                    "audit_fee_tx_hash": tx_hash,
+                    "audit_fee_amount": amount,
+                }
+            )
             .eq("id", receipt_id)
             .execute()
         )
@@ -249,13 +226,15 @@ class ReceiptService:
         """
         result = (
             self.client.table(self.table)
-            .update({
-                "status": ReceiptStatus.PAID.value,
-                "payout_tx_hash": tx_hash,
-                "payout_amount": amount,
-                "payout_wallet": wallet_address,
-                "paid_at": datetime.now(timezone.utc).isoformat(),
-            })
+            .update(
+                {
+                    "status": ReceiptStatus.PAID.value,
+                    "payout_tx_hash": tx_hash,
+                    "payout_amount": amount,
+                    "payout_wallet": wallet_address,
+                    "paid_at": datetime.now(UTC).isoformat(),
+                }
+            )
             .eq("id", receipt_id)
             .execute()
         )
@@ -289,16 +268,18 @@ class ReceiptService:
         # Get receipt for company_id and employee_id
         receipt = await self.get_by_id(receipt_id)
 
-        self.client.table("ledger_entries").insert({
-            "company_id": receipt.company_id,
-            "entry_type": entry_type,
-            "amount": amount,
-            "currency": "USDC",
-            "receipt_id": receipt_id,
-            "employee_id": receipt.employee_id,
-            "tx_hash": tx_hash,
-            "to_address": to_address,
-        }).execute()
+        self.client.table("ledger_entries").insert(
+            {
+                "company_id": receipt.company_id,
+                "entry_type": entry_type,
+                "amount": amount,
+                "currency": "USDC",
+                "receipt_id": receipt_id,
+                "employee_id": receipt.employee_id,
+                "tx_hash": tx_hash,
+                "to_address": to_address,
+            }
+        ).execute()
 
     async def list_by_company(
         self,
@@ -323,9 +304,7 @@ class ReceiptService:
 
         # Build base query for count
         count_query = (
-            self.client.table(self.table)
-            .select("id", count="exact")
-            .eq("company_id", company_id)
+            self.client.table(self.table).select("id", count="exact").eq("company_id", company_id)
         )
         if status:
             count_query = count_query.eq("status", status)
@@ -334,19 +313,12 @@ class ReceiptService:
         total = count_result.count or 0
 
         # Build data query
-        data_query = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("company_id", company_id)
-        )
+        data_query = self.client.table(self.table).select("*").eq("company_id", company_id)
         if status:
             data_query = data_query.eq("status", status)
 
         result = (
-            data_query
-            .order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
+            data_query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
         )
 
         receipts = [ReceiptResponse(**r) for r in result.data]
@@ -375,9 +347,7 @@ class ReceiptService:
 
         # Build base query for count
         count_query = (
-            self.client.table(self.table)
-            .select("id", count="exact")
-            .eq("employee_id", employee_id)
+            self.client.table(self.table).select("id", count="exact").eq("employee_id", employee_id)
         )
         if status:
             count_query = count_query.eq("status", status)
@@ -386,27 +356,18 @@ class ReceiptService:
         total = count_result.count or 0
 
         # Build data query
-        data_query = (
-            self.client.table(self.table)
-            .select("*")
-            .eq("employee_id", employee_id)
-        )
+        data_query = self.client.table(self.table).select("*").eq("employee_id", employee_id)
         if status:
             data_query = data_query.eq("status", status)
 
         result = (
-            data_query
-            .order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
+            data_query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
         )
 
         receipts = [ReceiptResponse(**r) for r in result.data]
         return receipts, total
 
-    async def get_pending_for_company(
-        self, company_id: str
-    ) -> list[ReceiptResponse]:
+    async def get_pending_for_company(self, company_id: str) -> list[ReceiptResponse]:
         """
         Get all pending receipts for a company (for approval queue).
 
@@ -484,29 +445,28 @@ async def update_receipt_status(
 ) -> dict[str, Any]:
     """Update receipt status with optional audit/payout info (helper function)."""
     service = _get_service()
-    
+
     update_data: dict[str, Any] = {"status": status}
-    
+
     if audit_result:
         update_data["ai_extracted_data"] = audit_result.get("extracted")
-        update_data["ai_decision_reason"] = audit_result.get("validation", {}).get("decision_reason")
+        update_data["ai_decision_reason"] = audit_result.get("validation", {}).get(
+            "decision_reason"
+        )
         update_data["ai_confidence"] = audit_result.get("confidence")
-    
+
     if payout_info:
-        update_data["payout_tx_hash"] = payout_info.get("queue_id") or payout_info.get("transaction_hash")
+        update_data["payout_tx_hash"] = payout_info.get("queue_id") or payout_info.get(
+            "transaction_hash"
+        )
         update_data["payout_amount"] = payout_info.get("amount_usd")
         update_data["payout_wallet"] = payout_info.get("to_address")
-    
-    result = (
-        service.client.table(service.table)
-        .update(update_data)
-        .eq("id", receipt_id)
-        .execute()
-    )
-    
+
+    result = service.client.table(service.table).update(update_data).eq("id", receipt_id).execute()
+
     if result.data:
         return result.data[0]
-    
+
     raise NotFoundException(
         message=f"Receipt not found: {receipt_id}",
         error_code="RECEIPT_NOT_FOUND",
