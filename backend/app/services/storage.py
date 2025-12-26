@@ -230,3 +230,62 @@ class StorageService:
                 message=f"Failed to download file: {str(e)}",
                 error_code="DOWNLOAD_FAILED",
             )
+
+    async def upload_receipt(
+        self,
+        file_content: bytes,
+        filename: str,
+        content_type: str,
+        company_id: str,
+        employee_id: str,
+    ) -> str:
+        """
+        Upload a receipt file and return the file path.
+
+        Convenience method that combines validation, path generation,
+        and upload in a single call.
+
+        Args:
+            file_content: File content as bytes
+            filename: Original filename
+            content_type: MIME type
+            company_id: Company UUID
+            employee_id: Employee UUID
+
+        Returns:
+            The file path in storage
+        """
+        result = await self.upload_file(
+            company_id=company_id,
+            employee_id=employee_id,
+            filename=filename,
+            content=file_content,
+            content_type=content_type,
+        )
+        return result["file_path"]
+
+
+# Module-level helper functions for convenience
+storage_service = StorageService()
+
+
+async def download_file(file_path: str) -> bytes:
+    """Download a file from storage."""
+    return await storage_service.download_file(file_path)
+
+
+async def upload_receipt(
+    file_content: bytes,
+    filename: str,
+    content_type: str,
+    company_id: str,
+    employee_id: str,
+) -> str:
+    """Upload a receipt and return the file path."""
+    return await storage_service.upload_receipt(
+        file_content=file_content,
+        filename=filename,
+        content_type=content_type,
+        company_id=company_id,
+        employee_id=employee_id,
+    )

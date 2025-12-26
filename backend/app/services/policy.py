@@ -187,3 +187,29 @@ class PolicyService:
         )
 
         return len(result.data) > 0
+
+
+# Module-level helper function
+_service_instance: PolicyService | None = None
+
+
+def _get_service() -> PolicyService:
+    """Get or create the service instance."""
+    global _service_instance
+    if _service_instance is None:
+        _service_instance = PolicyService()
+    return _service_instance
+
+
+async def get_policy_by_company(company_id: str) -> dict | None:
+    """Get active policy for a company (helper function)."""
+    try:
+        service = _get_service()
+        policy = await service.get_active_for_company(company_id)
+        return policy.model_dump()
+    except NotFoundException:
+        return None
+
+
+# Export singleton service
+policy_service = _get_service()

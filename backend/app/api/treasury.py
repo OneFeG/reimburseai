@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import Any
 import logging
 
-from app.core.config import settings
+from app.config import settings
 from app.services.thirdweb import thirdweb_service, ThirdwebError
 from app.services.receipt import receipt_service
 from app.services.employee import employee_service

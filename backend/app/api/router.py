@@ -22,6 +22,8 @@ from app.api import (
     advance,
     kyb,
     whitelist,
+    billing,
+    reimburse,
 )
 
 api_router = APIRouter()
@@ -102,4 +104,16 @@ api_router.include_router(
 api_router.include_router(
     whitelist.router,
     tags=["Whitelist"],
+)
+
+# Billing/Metering endpoints
+api_router.include_router(
+    billing.router,
+    tags=["Billing"],
+)
+
+# Full reimbursement flow endpoint
+api_router.include_router(
+    reimburse.router,
+    tags=["Reimbursement"],
 )

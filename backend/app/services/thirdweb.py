@@ -9,7 +9,7 @@ from decimal import Decimal
 import httpx
 import logging
 
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +24,9 @@ class ThirdwebService:
     Service for interacting with Thirdweb Engine for blockchain operations.
     
     Used by the Treasury agent to transfer USDC payouts to employee wallets.
+    Automatically uses mainnet or testnet based on settings.use_mainnet.
     """
     
-    # Avalanche Fuji testnet configuration
-    CHAIN_ID = 43113
-    CHAIN_NAME = "avalanche-fuji"
-    USDC_TOKEN_ADDRESS = "0x5425890298aed601595a70AB815c96711a31Bc65"
     USDC_DECIMALS = 6
     
     def __init__(self):
@@ -37,6 +34,11 @@ class ThirdwebService:
         self.secret_key = settings.thirdweb_secret_key
         self.company_wallet = settings.thirdweb_company_wallet_address
         self.agent_a_wallet = settings.thirdweb_agent_a_wallet_address
+        
+        # Network configuration from settings
+        self.chain_id = settings.actual_chain_id
+        self.chain_name = settings.chain_name
+        self.usdc_token_address = settings.usdc_token_address
     
     def _get_headers(self) -> dict[str, str]:
         """Get authorization headers for Thirdweb Engine API."""
@@ -71,7 +73,7 @@ class ThirdwebService:
             async with httpx.AsyncClient() as client:
                 # Use Thirdweb Engine to transfer ERC20 tokens
                 response = await client.post(
-                    f"{self.engine_url}/contract/{self.CHAIN_NAME}/{self.USDC_TOKEN_ADDRESS}/erc20/transfer",
+                    f"{self.engine_url}/contract/{self.chain_name}/{self.usdc_token_address}/erc20/transfer",
                     headers=self._get_headers(),
                     json={
                         "toAddress": to_address,
@@ -122,7 +124,7 @@ class ThirdwebService:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"{self.engine_url}/contract/{self.CHAIN_NAME}/{self.USDC_TOKEN_ADDRESS}/erc20/balance-of",
+                    f"{self.engine_url}/contract/{self.chain_name}/{self.usdc_token_address}/erc20/balance-of",
                     headers=self._get_headers(),
                     params={"wallet_address": address},
                     timeout=30.0
@@ -210,7 +212,7 @@ class ThirdwebService:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"{self.engine_url}/backend-wallet/{self.CHAIN_NAME}/get-balance",
+                    f"{self.engine_url}/backend-wallet/{self.chain_name}/get-balance",
                     headers=self._get_headers(),
                     params={"wallet_address": address},
                     timeout=30.0

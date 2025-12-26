@@ -10,7 +10,7 @@ from eth_account import Account
 from eth_account.messages import encode_defunct
 import logging
 
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 

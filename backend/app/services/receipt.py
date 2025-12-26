@@ -426,3 +426,92 @@ class ReceiptService:
         )
 
         return [ReceiptResponse(**r) for r in result.data]
+
+
+# Module-level helper functions for simplified access
+_service_instance: ReceiptService | None = None
+
+
+def _get_service() -> ReceiptService:
+    """Get or create the service instance."""
+    global _service_instance
+    if _service_instance is None:
+        _service_instance = ReceiptService()
+    return _service_instance
+
+
+async def get_receipt(receipt_id: str) -> dict[str, Any] | None:
+    """Get a receipt by ID (helper function)."""
+    try:
+        service = _get_service()
+        receipt = await service.get_by_id(receipt_id)
+        return receipt.model_dump()
+    except NotFoundException:
+        return None
+
+
+async def create_receipt(
+    company_id: str,
+    employee_id: str,
+    file_path: str,
+    filename: str | None = None,
+    content_type: str | None = None,
+    file_size: int | None = None,
+    description: str | None = None,
+    category: str | None = None,
+) -> dict[str, Any]:
+    """Create a new receipt record (helper function)."""
+    service = _get_service()
+    data = ReceiptCreate(
+        company_id=company_id,
+        employee_id=employee_id,
+        file_path=file_path,
+        original_filename=filename,
+        mime_type=content_type,
+        file_size=file_size,
+        description=description,
+        category=category,
+    )
+    receipt = await service.create(data)
+    return receipt.model_dump()
+
+
+async def update_receipt_status(
+    receipt_id: str,
+    status: str,
+    audit_result: dict[str, Any] | None = None,
+    payout_info: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Update receipt status with optional audit/payout info (helper function)."""
+    service = _get_service()
+    
+    update_data: dict[str, Any] = {"status": status}
+    
+    if audit_result:
+        update_data["ai_extracted_data"] = audit_result.get("extracted")
+        update_data["ai_decision_reason"] = audit_result.get("validation", {}).get("decision_reason")
+        update_data["ai_confidence"] = audit_result.get("confidence")
+    
+    if payout_info:
+        update_data["payout_tx_hash"] = payout_info.get("queue_id") or payout_info.get("transaction_hash")
+        update_data["payout_amount"] = payout_info.get("amount_usd")
+        update_data["payout_wallet"] = payout_info.get("to_address")
+    
+    result = (
+        service.client.table(service.table)
+        .update(update_data)
+        .eq("id", receipt_id)
+        .execute()
+    )
+    
+    if result.data:
+        return result.data[0]
+    
+    raise NotFoundException(
+        message=f"Receipt not found: {receipt_id}",
+        error_code="RECEIPT_NOT_FOUND",
+    )
+
+
+# Export singleton service
+receipt_service = _get_service()

@@ -55,6 +55,7 @@ class CompanyResponse(CompanyBase):
     slug: str
     status: CompanyStatus
     vault_address: str | None = None
+    vault_admin_address: str | None = None
     vault_deployed_at: datetime | None = None
     vault_chain_id: int | None = None
     settings: dict[str, Any] = Field(default_factory=dict)
