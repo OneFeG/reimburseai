@@ -38,6 +38,8 @@ backend/
 │   │   ├── advance.py       # Employee Advances
 │   │   ├── kyb.py           # KYB Verification
 │   │   ├── whitelist.py     # Wallet Whitelist
+│   │   ├── billing.py       # Usage Metering & Invoicing ⭐
+│   │   ├── reimburse.py     # Full Reimbursement Flow ⭐
 │   │   └── endpoints/       # Route handlers
 │   │       ├── health.py    # Health checks
 │   │       ├── upload.py    # POST /api/upload ⭐
@@ -45,11 +47,12 @@ backend/
 │   │       ├── employees.py # Employee CRUD
 │   │       ├── receipts.py  # Receipt management
 │   │       ├── policies.py  # Expense policies
-│   │       └── vaults.py    # Vault linking ⭐
+│   │       └── vaults.py    # Vault deployment & linking ⭐
 │   │
 │   ├── core/                # Core utilities
 │   │   ├── exceptions.py    # Custom exceptions
-│   │   └── security.py      # Auth & JWT
+│   │   ├── security.py      # Auth & JWT
+│   │   └── encryption.py    # PII Encryption (Fernet) ⭐
 │   │
 │   ├── db/                  # Database Layer
 │   │   └── supabase.py      # Supabase client
@@ -73,12 +76,16 @@ backend/
 │       ├── ledger.py        # Financial Ledger ⭐
 │       ├── advance.py       # Advance Management ⭐
 │       ├── kyb.py           # KYB Verification ⭐
-│       └── whitelist.py     # Wallet Whitelist ⭐
+│       ├── whitelist.py     # Wallet Whitelist ⭐
+│       ├── billing.py       # Usage Metering ⭐
+│       └── vault.py         # Vault Deployment (Factory) ⭐
 │
 ├── migrations/              # SQL migrations
 │   ├── 001_initial_schema.sql
 │   ├── 002_storage_policies.sql
-│   └── 003_additional_tables.sql  # Ledger, Advances, KYB, Whitelist ⭐
+│   ├── 003_additional_tables.sql  # Ledger, Advances, KYB, Whitelist ⭐
+│   ├── 004_billing_tables.sql     # Usage records, Invoices ⭐
+│   └── 005_vault_admin_address.sql # Vault admin tracking ⭐
 │
 ├── tests/                   # Test suite
 │   ├── conftest.py
@@ -234,8 +241,28 @@ The API will be available at:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/vaults/link` | **Link vault to company** |
+| `POST` | `/api/vaults/deploy` | **Deploy vault via Factory** ⭐ |
+| `POST` | `/api/vaults/link` | Link existing vault to company |
 | `GET` | `/api/vaults/company/{id}` | Get vault info |
+| `GET` | `/api/vaults/balance/{company_id}` | Get vault USDC/AVAX balance |
+| `GET` | `/api/vaults/permissions/{company_id}` | Verify operator permissions |
+
+### Billing & Metering
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/billing/usage` | Record usage event |
+| `GET` | `/api/billing/usage/{company_id}` | Get usage summary |
+| `POST` | `/api/billing/invoice/{company_id}` | Generate invoice |
+| `GET` | `/api/billing/invoices/{company_id}` | List invoices |
+
+### Reimbursement Orchestration
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/reimburse/process` | **Full audit→payout flow** ⭐ |
+| `POST` | `/api/reimburse/upload-and-process` | Upload + process in one call |
+| `GET` | `/api/reimburse/status/{receipt_id}` | Get reimbursement status |
 
 ### Health
 
@@ -373,6 +400,24 @@ APP_ENV=production
 DEBUG=false
 SECRET_KEY=your-secure-production-key
 ALLOWED_ORIGINS=https://reimburse.ai,https://app.reimburse.ai
+
+# Blockchain - Set to true for Avalanche Mainnet
+USE_MAINNET=true
+# Automatically configures:
+# - chain_id: 43114 (mainnet) vs 43113 (testnet)
+# - chain_name: avalanche vs avalanche-fuji
+# - usdc_token_address: mainnet vs testnet USDC
+
+# Thirdweb Engine
+THIRDWEB_ENGINE_URL=https://engine.thirdweb.com
+THIRDWEB_SECRET_KEY=your-thirdweb-secret
+THIRDWEB_COMPANY_WALLET_ADDRESS=0x...
+
+# OpenAI for AI Auditor
+OPENAI_API_KEY=sk-...
+
+# Treasury
+TREASURY_SECRET_KEY=your-treasury-secret
 ```
 
 ### Docker (Optional)
@@ -390,11 +435,26 @@ EXPOSE 8000
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-## 📋 Phase 1 Checklist
+## 📋 Phase Checklist
 
-- [x] **Task A**: Database Schema with RLS
-- [x] **Task B**: API Endpoints (`POST /api/upload`)
-- [x] **Task C**: Company-Vault Linking (`POST /api/vaults/link`)
+### Phase 1: SaaS Architecture & Vault
+- [x] Database Schema with RLS
+- [x] API Endpoints (`POST /api/upload`)
+- [x] Company-Vault Linking (`POST /api/vaults/link`)
+- [x] **Automated Vault Deployment** (`POST /api/vaults/deploy`) ⭐
+- [x] **RBAC** (Operator vs Admin roles)
+
+### Phase 2: Policy Engine & Credit Logic
+- [x] Policy CRUD & Configuration
+- [x] Policy-Aware AI Pipeline (GPT-4o)
+- [x] Internal Ledger System
+- [x] **Dynamic Billing/Metering** ⭐
+
+### Phase 3: Security & Compliance
+- [x] KYB/AML Integration
+- [x] **PII Encryption** (Fernet) ⭐
+- [x] Wallet Whitelist
+- [x] **Mainnet Configuration** (`USE_MAINNET=true`) ⭐
 
 ## 🤝 Team Collaboration
 
