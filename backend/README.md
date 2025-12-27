@@ -1,24 +1,114 @@
 # Reimburse.ai Backend
 
-> **Dev 3: Backend Lead** - Data & Logic Layer for the AI-powered expense reimbursement platform.
+> The **brain** of the app - stores data, processes receipts, and connects everything.
 
-This is the FastAPI backend for Reimburse.ai, providing multi-tenant data management, receipt storage, and API endpoints for the frontend and blockchain services.
-
-## 🏗️ Architecture
+## What This Does (Simple Version)
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Dev 2         │     │   Dev 3         │     │   Dev 1         │
-│   Frontend      │────▸│   Backend       │◂────│   Web3          │
-│   (Next.js)     │     │   (FastAPI)     │     │   (Thirdweb)    │
-└─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                 │
-                        ┌────────▼────────┐
-                        │    Supabase     │
-                        │  (PostgreSQL +  │
-                        │    Storage)     │
-                        └─────────────────┘
+┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│   FRONTEND   │ ───▶ │   BACKEND    │ ───▶ │    WEB3      │
+│  (What you   │      │  (This code) │      │  (Blockchain │
+│    see)      │      │              │      │   payments)  │
+└──────────────┘      └──────┬───────┘      └──────────────┘
+                             │
+                      ┌──────▼───────┐
+                      │   DATABASE   │
+                      │  (Supabase)  │
+                      └──────────────┘
 ```
+
+**In plain English:**
+1. 📸 Employee uploads receipt → Backend saves it
+2. 🤖 AI checks if receipt is valid → Backend tells Web3
+3. 💰 Web3 sends USDC to employee → Backend records it
+
+---
+
+## 🚀 Quick Start (5 Minutes)
+
+### Step 1: Install Python
+
+Make sure Python 3.11+ is installed:
+```bash
+python --version   # Should show 3.11 or higher
+```
+
+### Step 2: Setup Project
+
+```bash
+# Go to backend folder
+cd backend
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate it (Windows PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -e .
+```
+
+### Step 3: Add Your Keys
+
+```bash
+# Copy example file
+copy .env.example .env
+```
+
+Open `.env` and fill in:
+
+| Key | What It Is | Get From |
+|-----|-----------|----------|
+| `SUPABASE_URL` | Database URL | [supabase.com](https://supabase.com) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Database key | Supabase → Settings → API |
+| `THIRDWEB_SECRET_KEY` | Blockchain key | [thirdweb.com](https://thirdweb.com/dashboard) |
+| `OPENAI_API_KEY` | AI key | [platform.openai.com](https://platform.openai.com) |
+
+### Step 4: Run It!
+
+```bash
+python run.py
+```
+
+✅ Server runs at **http://localhost:8000**  
+📖 API docs at **http://localhost:8000/docs**
+
+---
+
+## 📂 What's In Each Folder
+
+```
+backend/
+├── app/
+│   ├── api/           # 🌐 API endpoints (URLs the frontend calls)
+│   ├── services/      # 🧠 Business logic (the actual work)
+│   ├── schemas/       # 📋 Data shapes (what data looks like)
+│   ├── db/            # 💾 Database connections
+│   └── config.py      # ⚙️ Settings from .env file
+├── migrations/        # 🗄️ Database setup scripts
+├── tests/             # 🧪 Test files
+└── run.py             # ▶️ Start the server
+```
+
+---
+
+## 🔌 Main API Endpoints
+
+| What | Endpoint | Method |
+|------|----------|--------|
+| Check server is alive | `/api/health` | GET |
+| Upload receipt | `/api/upload` | POST |
+| Get company info | `/api/companies/{id}` | GET |
+| Deploy new vault | `/api/vaults/deploy` | POST |
+| Check vault balance | `/api/vaults/balance/{company_id}` | GET |
+| Process reimbursement | `/api/reimburse/process` | POST |
+
+**See all 50+ endpoints:** http://localhost:8000/docs
+
+---
+
+## 🔗 How Parts Connect
 
 ## 📁 Project Structure
 

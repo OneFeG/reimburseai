@@ -119,6 +119,34 @@ class EmployeeService:
 
         return EmployeeResponse(**result.data[0])
 
+    async def get_by_wallet(self, wallet_address: str) -> EmployeeResponse:
+        """
+        Get employee by wallet address.
+
+        Args:
+            wallet_address: Wallet address
+
+        Returns:
+            Employee data
+
+        Raises:
+            NotFoundException: If employee not found
+        """
+        result = (
+            self.client.table(self.table)
+            .select("*")
+            .eq("wallet_address", wallet_address)
+            .execute()
+        )
+
+        if not result.data:
+            raise NotFoundException(
+                message=f"Employee not found with wallet: {wallet_address}",
+                error_code="EMPLOYEE_NOT_FOUND",
+            )
+
+        return EmployeeResponse(**result.data[0])
+
     async def update(self, employee_id: str, data: EmployeeUpdate) -> EmployeeResponse:
         """
         Update employee details.

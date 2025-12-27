@@ -53,6 +53,20 @@ async def get_employee(employee_id: str):
 
 
 @router.get(
+    "/wallet/{wallet_address}",
+    response_model=EmployeeResponse,
+    summary="Get employee by wallet address",
+)
+async def get_employee_by_wallet(wallet_address: str):
+    """Get employee details by wallet address."""
+    try:
+        service = EmployeeService()
+        return await service.get_by_wallet(wallet_address)
+    except AppException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
+
+
+@router.get(
     "/{employee_id}/stats",
     response_model=EmployeeWithStats,
     summary="Get employee with statistics",

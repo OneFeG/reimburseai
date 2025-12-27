@@ -18,6 +18,14 @@ class EmployeeStatus(str, Enum):
     PENDING = "pending"
 
 
+class EmployeeRole(str, Enum):
+    """Employee role for RBAC."""
+
+    ADMIN = "admin"
+    MANAGER = "manager"
+    EMPLOYEE = "employee"
+
+
 class EmployeeBase(BaseModel):
     """Base employee fields."""
 
@@ -41,6 +49,10 @@ class EmployeeCreate(EmployeeBase):
         min_length=8,
         description="Password (if using email/password auth)",
     )
+    role: EmployeeRole = Field(
+        default=EmployeeRole.EMPLOYEE,
+        description="Employee role for RBAC",
+    )
 
 
 class EmployeeUpdate(BaseModel):
@@ -54,6 +66,7 @@ class EmployeeUpdate(BaseModel):
         pattern=r"^0x[a-fA-F0-9]{40}$",
     )
     status: EmployeeStatus | None = None
+    role: EmployeeRole | None = None
 
 
 class EmployeeResponse(EmployeeBase):
@@ -62,6 +75,7 @@ class EmployeeResponse(EmployeeBase):
     id: str
     company_id: str
     status: EmployeeStatus
+    role: EmployeeRole = EmployeeRole.EMPLOYEE
     wallet_address: str | None = None
     wallet_verified_at: datetime | None = None
     created_at: datetime
