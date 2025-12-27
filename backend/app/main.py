@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.router import api_router
 from app.config import settings
@@ -100,6 +100,13 @@ async def app_exception_handler(request: Request, exc: AppException):
 
 # Include API router
 app.include_router(api_router, prefix="/api")
+
+
+# Favicon endpoint (silence browser 404)
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Return empty response for favicon requests."""
+    return Response(status_code=204)
 
 
 # Root endpoint
