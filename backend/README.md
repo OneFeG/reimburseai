@@ -160,8 +160,8 @@ backend/
 │       ├── receipt.py
 │       ├── policy.py
 │       ├── storage.py
-│       ├── x402.py          # x402 Payment Protocol ⭐
-│       ├── thirdweb.py      # Blockchain/USDC ⭐
+│       ├── x402.py          # x402 Payment Protocol (Thirdweb Engine) ⭐
+│       ├── thirdweb.py      # Thirdweb Engine API Client ⭐
 │       ├── audit.py         # AI Receipt Auditing ⭐
 │       ├── ledger.py        # Financial Ledger ⭐
 │       ├── advance.py       # Advance Management ⭐
@@ -498,10 +498,11 @@ USE_MAINNET=true
 # - chain_name: avalanche vs avalanche-fuji
 # - usdc_token_address: mainnet vs testnet USDC
 
-# Thirdweb Engine
+# Thirdweb Engine (for x402 payments)
 THIRDWEB_ENGINE_URL=https://engine.thirdweb.com
 THIRDWEB_SECRET_KEY=your-thirdweb-secret
 THIRDWEB_COMPANY_WALLET_ADDRESS=0x...
+THIRDWEB_AUDITOR_WALLET_ADDRESS=0x...  # Receives $0.05 USDC per audit
 
 # OpenAI for AI Auditor
 OPENAI_API_KEY=sk-...
