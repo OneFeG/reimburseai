@@ -160,7 +160,7 @@ backend/
 │       ├── receipt.py
 │       ├── policy.py
 │       ├── storage.py
-│       ├── x402.py          # x402 Payment Protocol (Thirdweb Engine) ⭐
+│       ├── x402.py          # x402 Payment Protocol (Thirdweb Compatible) ⭐
 │       ├── thirdweb.py      # Thirdweb Engine API Client ⭐
 │       ├── audit.py         # AI Receipt Auditing ⭐
 │       ├── ledger.py        # Financial Ledger ⭐
@@ -281,6 +281,49 @@ The API will be available at:
 | `POST` | `/api/treasury/payout` | **Agent B: USDC payout** (internal) ⭐ |
 | `GET` | `/api/treasury/balance` | Check treasury balance |
 | `GET` | `/api/treasury/transaction/{queue_id}` | Track payout status |
+
+### x402 Payment Protocol (Thirdweb Compatible)
+
+The audit endpoint uses the **x402 micropayment protocol** compatible with Thirdweb's SDK:
+
+```
+┌─────────┐      ┌─────────┐      ┌──────────────┐      ┌───────────────┐
+│ Client  │      │ Backend │      │ Thirdweb     │      │ Blockchain    │
+│ (React) │      │ (FastAPI)│     │ Facilitator  │      │ (Avalanche)   │
+└────┬────┘      └────┬────┘      └──────┬───────┘      └───────┬───────┘
+     │ POST /audit    │                   │                      │
+     │───────────────>│                   │                      │
+     │                │                   │                      │
+     │ 402 + Payment  │                   │                      │
+     │<───────────────│                   │                      │
+     │                │                   │                      │
+     │ User signs     │                   │                      │
+     │ ERC-3009       │                   │                      │
+     │                │                   │                      │
+     │ POST /audit    │                   │                      │
+     │ + X-Payment    │                   │                      │
+     │───────────────>│ Settle via       │                      │
+     │                │ facilitator API  │                      │
+     │                │──────────────────>│ Execute transfer    │
+     │                │                   │─────────────────────>│
+     │ Audit result   │                   │                      │
+     │<───────────────│                   │                      │
+```
+
+**402 Response Format:**
+```json
+{
+  "x402Version": 1,
+  "scheme": "exact",
+  "network": "avalanche-fuji",
+  "maxAmountRequired": "50000",
+  "payTo": "0x2fAC...",
+  "asset": "0x5425...",
+  "description": "AI-powered receipt audit - $0.05"
+}
+```
+
+**Price:** $0.05 USDC per audit
 
 ### Financial Ledger
 
@@ -511,19 +554,44 @@ OPENAI_API_KEY=sk-...
 TREASURY_SECRET_KEY=your-treasury-secret
 ```
 
-### Docker (Optional)
+### Docker (with UV)
 
 ```dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY . .
 
+# Install UV
 RUN pip install uv
-RUN uv sync --frozen
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies
+RUN uv sync --frozen --no-dev
+
+# Copy application code
+COPY app/ app/
+COPY run.py .
 
 EXPOSE 8000
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Running with UV (recommended)
+
+```bash
+# Install UV if not already
+pip install uv
+
+# Sync dependencies
+uv sync
+
+# Run development server
+uv run python run.py
+
+# Or directly with uvicorn
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 ## 📋 Phase Checklist

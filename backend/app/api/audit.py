@@ -2,6 +2,7 @@
 Audit API endpoint for Agent A (Auditor).
 
 Handles receipt audit requests with x402 payment gating.
+Compatible with Thirdweb's useFetchWithPayment() React hook.
 """
 
 import json
@@ -65,7 +66,8 @@ class AuditResponse(BaseModel):
 async def audit_receipt(
     request: Request,
     body: AuditRequest,
-    x_payment: str | None = Header(None, alias="X-PAYMENT"),
+    x_payment: str | None = Header(None, alias="X-Payment"),
+    x_payment_lower: str | None = Header(None, alias="x-payment"),
 ):
     """
     Audit a receipt for expense reimbursement eligibility.
@@ -73,38 +75,45 @@ async def audit_receipt(
     This endpoint is gated by x402 protocol - requires micropayment to process.
     Uses GPT-4o vision to analyze the receipt image and validate against company policy.
 
+    Compatible with Thirdweb's useFetchWithPayment() React hook.
+
     Flow:
     1. Verify x402 payment
     2. Get receipt image (from storage or base64 input)
     3. Get company policy
     4. Run AI audit
-    5. Settle payment on success
+    5. Settle payment via Thirdweb facilitator
     6. Return audit result
     """
+    # Support both X-Payment and x-payment header names
+    payment_header = x_payment or x_payment_lower
+    
     # Step 1: Verify x402 payment
     try:
-        payment_result = await x402_service.verify_payment(x_payment)
+        payment_result = await x402_service.verify_payment(payment_header)
         logger.info(f"Payment verified from {payment_result.get('payer')}")
     except X402PaymentError as e:
-        # Return 402 with payment requirements
+        # Return 402 with Thirdweb-compatible payment requirements
+        # This format works with useFetchWithPayment() React hook
+        resource_url = str(request.url)
         payment_requirements = x402_service.generate_payment_requirements(
-            resource=str(request.url),
-            description="AI-powered receipt audit service",
+            resource=resource_url,
+            description="AI-powered receipt audit service - $0.05 per audit",
         )
+        
+        # The response body should contain all payment requirements
+        # Thirdweb SDK reads both body and X-Payment-Required header
+        response_body = {
+            **payment_requirements,
+            "error": "payment_required",
+            "message": str(e) if str(e) != "Missing X-Payment header" else "Payment required to access this resource",
+        }
+        
         return Response(
             status_code=402,
-            content=json.dumps(
-                {
-                    "error": "payment_required",
-                    "message": str(e),
-                    "x402_version": 1,
-                    "payment_requirements": payment_requirements,
-                }
-            ),
+            content=json.dumps(response_body),
             media_type="application/json",
-            headers={
-                "X-PAYMENT-REQUIRED": json.dumps(payment_requirements),
-            },
+            headers=x402_service.generate_402_response_headers(payment_requirements),
         )
 
     # Step 2: Get receipt image
@@ -157,10 +166,15 @@ async def audit_receipt(
         logger.error(f"Audit failed: {e}")
         raise HTTPException(status_code=500, detail=f"Audit failed: {str(e)}")
 
-    # Step 5: Settle payment on success
+    # Step 5: Settle payment via Thirdweb facilitator
     try:
-        await x402_service.settle_payment(x_payment)
-        logger.info("Payment settled successfully")
+        # Use facilitator API for gasless settlement
+        settlement = await x402_service.settle_via_facilitator(
+            payment_header=payment_header,
+            resource_url=str(request.url),
+            method="POST",
+        )
+        logger.info(f"Payment settled: {settlement}")
     except X402PaymentError as e:
         logger.error(f"Payment settlement failed: {e}")
         # Continue anyway - audit was successful

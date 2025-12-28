@@ -80,7 +80,7 @@ async def process_reimbursement(body: ReimbursementRequest):
     if not receipt:
         raise HTTPException(status_code=404, detail="Receipt not found")
 
-    if receipt.get("status") not in ["pending", "submitted"]:
+    if receipt.get("status") not in ["uploaded", "pending", "submitted", "processing"]:
         raise HTTPException(
             status_code=400,
             detail=f"Receipt already processed with status: {receipt.get('status')}",
@@ -125,7 +125,7 @@ async def process_reimbursement(body: ReimbursementRequest):
 
         audit_result = await audit_service.analyze_receipt(
             image_data=image_data,
-            image_content_type=receipt.get("content_type", "image/jpeg"),
+            image_content_type=receipt.get("mime_type", "image/jpeg"),
             policy={
                 "amount_cap_usd": policy_data.get("amount_limit") if policy_data else 100,
                 "allowed_categories": policy_data.get("allowed_categories", [])

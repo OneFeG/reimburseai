@@ -15,7 +15,8 @@ from app.db.dependencies import get_supabase_client
 logger = logging.getLogger(__name__)
 
 
-LedgerEntryType = Literal["advance", "payout", "fee", "deposit"]
+# These match the ledger_entry_type enum in the database
+LedgerEntryType = Literal["audit_fee", "reimbursement", "deposit", "withdrawal", "advance", "advance_repayment", "payout", "fee"]
 LedgerEntryStatus = Literal["pending", "processing", "settled", "failed", "cancelled"]
 
 
@@ -59,27 +60,44 @@ class LedgerService:
         """
         client = get_supabase_client()
 
+        # Map 'payout' to 'reimbursement' for database enum compatibility
+        db_entry_type = entry_type
+        if entry_type == "payout":
+            db_entry_type = "reimbursement"
+
         entry_data = {
             "id": str(uuid.uuid4()),
             "company_id": company_id,
             "employee_id": employee_id,
-            "amount_usd": float(amount_usd),
-            "fee_usd": float(fee_usd),
-            "entry_type": entry_type,
-            "status": "pending",
-            "reference_id": reference_id,
-            "reference_type": reference_type,
+            "amount": float(amount_usd),  # Database uses 'amount'
+            "amount_usd": float(amount_usd),  # Also store in amount_usd if column exists
+            "currency": "USDC",
+            "entry_type": db_entry_type,
+            "receipt_id": reference_id if reference_type == "receipt" else None,
             "metadata": metadata or {},
-            "created_at": datetime.utcnow().isoformat(),
         }
 
-        result = client.table("ledger_entries").insert(entry_data).execute()
+        try:
+            result = client.table("ledger_entries").insert(entry_data).execute()
 
-        if result.data:
-            logger.info(
-                f"Ledger entry created: {entry_type} ${amount_usd} for company {company_id}"
-            )
-            return result.data[0]
+            if result.data:
+                logger.info(
+                    f"Ledger entry created: {entry_type} ${amount_usd} for company {company_id}"
+                )
+                return result.data[0]
+        except Exception as e:
+            logger.error(f"Failed to create ledger entry: {e}")
+            # Try with minimal fields
+            minimal_data = {
+                "id": str(uuid.uuid4()),
+                "company_id": company_id,
+                "employee_id": employee_id,
+                "amount": float(amount_usd),
+                "entry_type": db_entry_type,
+            }
+            result = client.table("ledger_entries").insert(minimal_data).execute()
+            if result.data:
+                return result.data[0]
 
         raise Exception("Failed to create ledger entry")
 
@@ -208,7 +226,7 @@ class LedgerService:
         # Get all entries for the company
         result = (
             client.table("ledger_entries")
-            .select("entry_type, status, amount_usd, fee_usd")
+            .select("entry_type, amount, metadata")
             .eq("company_id", company_id)
             .execute()
         )
@@ -225,22 +243,17 @@ class LedgerService:
         }
 
         for entry in entries:
-            amount = Decimal(str(entry.get("amount_usd", 0)))
-            fee = Decimal(str(entry.get("fee_usd", 0)))
+            amount = Decimal(str(entry.get("amount", 0) or 0))
             entry_type = entry.get("entry_type")
-            status = entry.get("status")
 
-            if entry_type == "payout":
+            if entry_type in ("payout", "reimbursement"):
                 summary["total_payouts"] += amount
             elif entry_type == "advance":
                 summary["total_advances"] += amount
+            elif entry_type == "audit_fee":
+                summary["total_fees"] += amount
 
-            summary["total_fees"] += fee
-
-            if status == "pending":
-                summary["pending_amount"] += amount
-            elif status == "settled":
-                summary["settled_amount"] += amount
+            summary["settled_amount"] += amount
 
         # Convert Decimals to floats for JSON serialization
         return {k: float(v) if isinstance(v, Decimal) else v for k, v in summary.items()}

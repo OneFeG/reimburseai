@@ -65,6 +65,22 @@ class ReceiptService:
 
         return ReceiptResponse(**result.data[0])
 
+    async def get_receipt(self, receipt_id: str) -> dict[str, Any] | None:
+        """
+        Get receipt by ID as a dictionary.
+
+        Args:
+            receipt_id: Receipt UUID
+
+        Returns:
+            Receipt data as dict, or None if not found
+        """
+        try:
+            receipt = await self.get_by_id(receipt_id)
+            return receipt.model_dump()
+        except NotFoundException:
+            return None
+
     async def update(self, receipt_id: str, data: ReceiptUpdate) -> ReceiptResponse:
         """
         Update receipt details.
@@ -387,6 +403,91 @@ class ReceiptService:
         )
 
         return [ReceiptResponse(**r) for r in result.data]
+
+    async def create_receipt(
+        self,
+        company_id: str,
+        employee_id: str,
+        file_path: str,
+        filename: str | None = None,
+        content_type: str | None = None,
+        file_size: int | None = None,
+        description: str | None = None,
+        category: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Create a new receipt record.
+
+        Args:
+            company_id: Company UUID
+            employee_id: Employee UUID
+            file_path: Storage path of the uploaded file
+            filename: Original filename
+            content_type: MIME type
+            file_size: File size in bytes
+            description: Optional description
+            category: Optional category
+
+        Returns:
+            Created receipt as dict
+        """
+        data = ReceiptCreate(
+            company_id=company_id,
+            employee_id=employee_id,
+            file_path=file_path,
+            file_name=filename or "receipt",
+            mime_type=content_type or "image/jpeg",
+            file_size=file_size or 0,
+            description=description,
+            category=category,
+        )
+        receipt = await self.create(data)
+        return receipt.model_dump()
+
+    async def update_receipt_status(
+        self,
+        receipt_id: str,
+        status: str,
+        audit_result: dict[str, Any] | None = None,
+        payout_info: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Update receipt status with optional audit/payout info.
+
+        Args:
+            receipt_id: Receipt UUID
+            status: New status
+            audit_result: Optional audit result data
+            payout_info: Optional payout info data
+
+        Returns:
+            Updated receipt as dict
+        """
+        update_data: dict[str, Any] = {"status": status}
+
+        if audit_result:
+            update_data["ai_extracted_data"] = audit_result.get("extracted")
+            update_data["ai_decision_reason"] = audit_result.get("validation", {}).get(
+                "decision_reason"
+            )
+            update_data["ai_confidence"] = audit_result.get("confidence")
+
+        if payout_info:
+            update_data["payout_tx_hash"] = payout_info.get("queue_id") or payout_info.get(
+                "transaction_hash"
+            )
+            update_data["payout_amount"] = payout_info.get("amount_usd")
+            update_data["payout_wallet"] = payout_info.get("to_address")
+
+        result = self.client.table(self.table).update(update_data).eq("id", receipt_id).execute()
+
+        if result.data:
+            return result.data[0]
+
+        raise NotFoundException(
+            message=f"Receipt not found: {receipt_id}",
+            error_code="RECEIPT_NOT_FOUND",
+        )
 
 
 # Module-level helper functions for simplified access

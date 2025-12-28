@@ -15,6 +15,7 @@ from app.api import (
     reimburse,
     treasury,
     whitelist,
+    test_endpoints,
 )
 from app.api.endpoints import (
     companies,
@@ -116,4 +117,10 @@ api_router.include_router(
 api_router.include_router(
     reimburse.router,
     tags=["Reimbursement"],
+)
+
+# Test endpoints (development only - bypasses x402)
+api_router.include_router(
+    test_endpoints.router,
+    tags=["Test"],
 )
