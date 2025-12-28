@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+
+# Environment variables - NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Keep example env file
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Cache
+.cache/
+.parcel-cache/
+.turbo/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Secrets - CRITICAL: Never commit private keys or secrets
+*.pem
+*.key
+*.secret
+secrets/
+.secrets/
+
+# Thirdweb
+.thirdweb/
+
+# Foundry (if using)
+cache/
+broadcast/
