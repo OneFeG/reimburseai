@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  
+  --border: #333333;
+  
+  --primary: #22D3EE;
+  --primary-foreground: #000000;
+  
+  --muted: #111111;
+  --muted-foreground: #A1A1AA;
+  
+  --accent: #111111;
+  --accent-foreground: #ffffff;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-black/50 backdrop-blur-md border border-white/10;
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  }
+}
