@@ -16,7 +16,7 @@
  * 3. Retry request with tx hash proof
  */
 
-import { getContract, prepareContractCall, sendTransaction, waitForReceipt, signTypedData } from 'thirdweb';
+import { getContract, prepareContractCall, sendTransaction, waitForReceipt } from 'thirdweb';
 import { thirdwebClient, chain, USDC_ADDRESS, X402_CONFIG } from './thirdweb';
 import type { Account } from 'thirdweb/wallets';
 
@@ -215,8 +215,8 @@ export async function createPaymentERC3009(
     
     // Sign the authorization using EIP-712
     // This is gasless - just a signature
-    const signature = await signTypedData({
-      account,
+    // In Thirdweb v5, use account.signTypedData method
+    const signature = await account.signTypedData({
       domain,
       types: TRANSFER_WITH_AUTHORIZATION_TYPES,
       primaryType: 'TransferWithAuthorization',
