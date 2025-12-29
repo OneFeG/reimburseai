@@ -62,8 +62,12 @@ class AuditService:
 
         # Build policy context for the prompt
         policy_context = self._build_policy_context(policy)
+        
+        # Include current date so GPT-4o can properly validate receipt dates
+        current_date = datetime.utcnow().strftime("%Y-%m-%d")
 
         system_prompt = f"""You are an expert expense receipt auditor for a corporate expense reimbursement system.
+Today's date is {current_date}.
 
 Analyze the provided receipt image and extract the following information:
 1. Vendor/merchant name

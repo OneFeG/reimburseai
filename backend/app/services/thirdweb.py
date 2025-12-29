@@ -1,7 +1,7 @@
 """
 Thirdweb Service for blockchain operations.
 
-Handles USDC transfers and wallet management via Thirdweb Engine.
+Handles USDC transfers and wallet management via Thirdweb REST API.
 """
 
 import logging
@@ -23,16 +23,17 @@ class ThirdwebError(Exception):
 
 class ThirdwebService:
     """
-    Service for interacting with Thirdweb Engine for blockchain operations.
+    Service for interacting with Thirdweb API for blockchain operations.
 
     Used by the Treasury agent to transfer USDC payouts to employee wallets.
     Automatically uses mainnet or testnet based on settings.use_mainnet.
     """
 
     USDC_DECIMALS = 6
+    # Thirdweb REST API base URL
+    THIRDWEB_API_URL = "https://api.thirdweb.com"
 
     def __init__(self):
-        self.engine_url = settings.thirdweb_engine_url
         self.secret_key = settings.thirdweb_secret_key
         self.company_wallet = settings.thirdweb_company_wallet_address
         self.agent_a_wallet = settings.thirdweb_agent_a_wallet_address
@@ -43,11 +44,10 @@ class ThirdwebService:
         self.usdc_token_address = settings.usdc_token_address
 
     def _get_headers(self) -> dict[str, str]:
-        """Get authorization headers for Thirdweb Engine API."""
+        """Get authorization headers for Thirdweb API."""
         return {
-            "Authorization": f"Bearer {self.secret_key}",
+            "x-secret-key": self.secret_key,
             "Content-Type": "application/json",
-            "x-backend-wallet-address": self.company_wallet,
         }
 
     async def transfer_usdc(
@@ -73,30 +73,49 @@ class ThirdwebService:
 
         try:
             async with httpx.AsyncClient() as client:
-                # Use Thirdweb Engine to transfer ERC20 tokens
+                # Use Thirdweb REST API for ERC20 transfer
                 response = await client.post(
-                    f"{self.engine_url}/contract/{self.chain_name}/{self.usdc_token_address}/erc20/transfer",
+                    f"{self.THIRDWEB_API_URL}/v1/contracts/write",
                     headers=self._get_headers(),
                     json={
-                        "toAddress": to_address,
-                        "amount": str(amount_wei),
+                        "calls": [
+                            {
+                                "contractAddress": self.usdc_token_address,
+                                "method": "function transfer(address to, uint256 amount)",
+                                "params": [to_address, str(amount_wei)],
+                            }
+                        ],
+                        "chainId": self.chain_id,
+                        "from": self.company_wallet,
                     },
                     timeout=60.0,
                 )
 
                 if response.status_code not in (200, 201):
-                    error_data = response.json() if response.content else {}
+                    try:
+                        error_data = response.json() if response.content else {}
+                        error_msg = error_data.get('message', error_data.get('error', 'Unknown error'))
+                    except Exception:
+                        error_msg = response.text[:200] if response.text else f"HTTP {response.status_code}"
                     raise ThirdwebError(
-                        f"USDC transfer failed: {error_data.get('message', 'Unknown error')}"
+                        f"USDC transfer failed: {error_msg}"
                     )
 
-                result = response.json()
+                try:
+                    result = response.json()
+                except Exception as e:
+                    logger.error(f"Failed to parse Thirdweb response: {response.text[:500]}")
+                    raise ThirdwebError(f"Invalid response from Thirdweb: {str(e)}")
+
+                # Extract transaction ID from result
+                transaction_ids = result.get("result", {}).get("transactionIds", [])
+                queue_id = transaction_ids[0] if transaction_ids else result.get("result", {}).get("queueId")
 
                 logger.info(f"USDC transfer initiated: {amount_usd} USD to {to_address}")
 
                 return {
                     "success": True,
-                    "queue_id": result.get("result", {}).get("queueId"),
+                    "queue_id": queue_id,
                     "to_address": to_address,
                     "amount_usd": float(amount_usd),
                     "amount_wei": amount_wei,
@@ -111,7 +130,7 @@ class ThirdwebService:
         wallet_address: str | None = None,
     ) -> dict[str, Any]:
         """
-        Get USDC balance for a wallet.
+        Get USDC balance for a wallet using Thirdweb REST API.
 
         Args:
             wallet_address: Wallet to check (defaults to company wallet)
@@ -123,21 +142,29 @@ class ThirdwebService:
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.engine_url}/contract/{self.chain_name}/{self.usdc_token_address}/erc20/balance-of",
+                # Use Thirdweb REST API to read balance
+                response = await client.post(
+                    f"{self.THIRDWEB_API_URL}/v1/contracts/read",
                     headers=self._get_headers(),
-                    params={"wallet_address": address},
+                    json={
+                        "contractAddress": self.usdc_token_address,
+                        "method": "function balanceOf(address account) view returns (uint256)",
+                        "params": [address],
+                        "chainId": self.chain_id,
+                    },
                     timeout=30.0,
                 )
 
                 if response.status_code != 200:
-                    error_data = response.json() if response.content else {}
-                    raise ThirdwebError(
-                        f"Balance check failed: {error_data.get('message', 'Unknown error')}"
-                    )
+                    try:
+                        error_data = response.json() if response.content else {}
+                        error_msg = error_data.get('message', 'Unknown error')
+                    except Exception:
+                        error_msg = f"HTTP {response.status_code}"
+                    raise ThirdwebError(f"Balance check failed: {error_msg}")
 
                 result = response.json()
-                balance_wei = int(result.get("result", {}).get("value", "0"))
+                balance_wei = int(result.get("result", "0"))
                 balance_usd = Decimal(balance_wei) / (10**self.USDC_DECIMALS)
 
                 return {
@@ -159,40 +186,20 @@ class ThirdwebService:
         Check the status of a queued transaction.
 
         Args:
-            queue_id: The queue ID returned from transfer operations
+            queue_id: The queue ID/transaction hash returned from transfer operations
 
         Returns:
             Dict with transaction status
         """
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.engine_url}/transaction/status/{queue_id}",
-                    headers=self._get_headers(),
-                    timeout=30.0,
-                )
-
-                if response.status_code != 200:
-                    error_data = response.json() if response.content else {}
-                    raise ThirdwebError(
-                        f"Status check failed: {error_data.get('message', 'Unknown error')}"
-                    )
-
-                result = response.json()
-                tx_data = result.get("result", {})
-
-                return {
-                    "queue_id": queue_id,
-                    "status": tx_data.get("status"),
-                    "transaction_hash": tx_data.get("transactionHash"),
-                    "chain_id": tx_data.get("chainId"),
-                    "from_address": tx_data.get("fromAddress"),
-                    "to_address": tx_data.get("toAddress"),
-                }
-
-        except httpx.RequestError as e:
-            logger.error(f"Thirdweb status check failed: {e}")
-            raise ThirdwebError(f"Status check request failed: {str(e)}")
+        # For REST API, the queue_id is often the transaction hash
+        # We can check the transaction status on-chain
+        return {
+            "queue_id": queue_id,
+            "status": "pending",  # REST API doesn't provide queue status
+            "transaction_hash": queue_id if queue_id.startswith("0x") else None,
+            "chain_id": self.chain_id,
+            "note": "Use blockchain explorer to verify transaction status",
+        }
 
     async def get_native_balance(
         self,
@@ -211,30 +218,37 @@ class ThirdwebService:
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{self.engine_url}/backend-wallet/{self.chain_name}/get-balance",
-                    headers=self._get_headers(),
-                    params={"wallet_address": address},
+                # Use Avalanche RPC to get balance
+                rpc_url = "https://api.avax-test.network/ext/bc/C/rpc" if self.chain_id == 43113 else "https://api.avax.network/ext/bc/C/rpc"
+                
+                response = await client.post(
+                    rpc_url,
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "eth_getBalance",
+                        "params": [address, "latest"],
+                    },
                     timeout=30.0,
                 )
 
                 if response.status_code != 200:
-                    error_data = response.json() if response.content else {}
-                    raise ThirdwebError(
-                        f"Native balance check failed: {error_data.get('message', 'Unknown error')}"
-                    )
+                    raise ThirdwebError("Native balance check failed")
 
                 result = response.json()
+                balance_hex = result.get("result", "0x0")
+                balance_wei = int(balance_hex, 16)
+                balance_avax = balance_wei / (10**18)
 
                 return {
                     "wallet_address": address,
-                    "balance_wei": result.get("result", {}).get("value", "0"),
-                    "display_value": result.get("result", {}).get("displayValue", "0"),
+                    "balance_wei": str(balance_wei),
+                    "display_value": f"{balance_avax:.6f}",
                     "symbol": "AVAX",
                 }
 
         except httpx.RequestError as e:
-            logger.error(f"Thirdweb native balance check failed: {e}")
+            logger.error(f"Native balance check failed: {e}")
             raise ThirdwebError(f"Native balance check request failed: {str(e)}")
 
 
