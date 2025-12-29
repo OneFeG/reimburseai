@@ -71,7 +71,8 @@ class LedgerService:
             "employee_id": employee_id,
             "amount": float(amount_usd),  # Database uses 'amount'
             "amount_usd": float(amount_usd),  # Also store in amount_usd if column exists
-            "currency": "USDC",
+            # Note: Don't include currency - let DB use default (VARCHAR(3) can't fit "USDC")
+            # Run migration 008_fix_currency_column.sql to fix this
             "entry_type": db_entry_type,
             "receipt_id": reference_id if reference_type == "receipt" else None,
             "metadata": metadata or {},
