@@ -136,6 +136,23 @@ class RateLimitException(AppException):
         )
 
 
+class SecurityException(AppException):
+    """403 Security Error - Security check failed."""
+
+    def __init__(
+        self,
+        message: str = "Security check failed",
+        error_code: str = "SECURITY_ERROR",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            status_code=403,
+            error_code=error_code,
+            details=details,
+        )
+
+
 class StorageException(AppException):
     """500 Storage Error - File storage operation failed."""
 

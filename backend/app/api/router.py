@@ -12,7 +12,9 @@ from app.api import (
     billing,
     kyb,
     ledger,
+    membership,
     reimburse,
+    security,
     treasury,
     whitelist,
     test_endpoints,
@@ -123,4 +125,16 @@ api_router.include_router(
 api_router.include_router(
     test_endpoints.router,
     tags=["Test"],
+)
+
+# Multi-company membership endpoints
+api_router.include_router(
+    membership.router,
+    tags=["Multi-Company"],
+)
+
+# Security endpoints
+api_router.include_router(
+    security.router,
+    tags=["Security"],
 )

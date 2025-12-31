@@ -1,143 +1,349 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useActiveAccount, useActiveWallet, useDisconnect } from "thirdweb/react";
-import { api, employeeApi, companyApi, type Employee, type Company } from "@/lib/api";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { useActiveAccount, useActiveWallet } from "thirdweb/react";
+import { api } from "@/lib/api/client";
 
-interface User {
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  wallet_address: string;
+  role: "admin" | "manager" | "employee";
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  slug: string;
+  email: string;
+  vault_address?: string;
+  admin_address?: string;
+  created_at: string;
+}
+
+export interface CompanyMembership {
+  id: string;
+  employee_id: string;
+  company_id: string;
+  company_name: string;
+  company_slug: string;
+  vault_address?: string;
+  role: "admin" | "manager" | "employee";
+  status: "active" | "inactive" | "pending";
+  is_primary: boolean;
+  department?: string;
+  wallet_address?: string;
+}
+
+export interface User {
   employee: Employee | null;
   company: Company | null;
-  walletAddress: string | null;
-  isAdmin: boolean;
-  isManager: boolean;
+  memberships: CompanyMembership[];
+  activeCompanyId: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
   isConnected: boolean;
-  error: string | null;
-  login: () => Promise<void>;
+  isLoading: boolean;
+  isDemo: boolean;
+  walletAddress: string | null;
+  activeCompany: Company | null;
+  companies: CompanyMembership[];
+  login: (walletAddress: string) => Promise<void>;
   logout: () => void;
-  refreshUser: () => Promise<void>;
+  refresh: () => Promise<void>;
+  enableDemoMode: () => void;
+  disableDemoMode: () => void;
+  switchCompany: (companyId: string) => Promise<void>;
+  addCompany: (companySlug: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// Demo user data for testing
+const DEMO_COMPANIES: CompanyMembership[] = [
+  {
+    id: "demo-membership-001",
+    employee_id: "demo-employee-001",
+    company_id: "demo-company-001",
+    company_name: "Demo Corporation",
+    company_slug: "demo-corp",
+    vault_address: "0x9D86Af1Fe77969caD642c926CA81447399c1606C",
+    role: "admin",
+    status: "active",
+    is_primary: true,
+    department: "Engineering",
+  },
+  {
+    id: "demo-membership-002",
+    employee_id: "demo-employee-001",
+    company_id: "demo-company-002",
+    company_name: "Acme Inc",
+    company_slug: "acme-inc",
+    vault_address: "0x96047A744Ab8818F5Ee99339b1Aa38A3F3F47527",
+    role: "employee",
+    status: "active",
+    is_primary: false,
+    department: "Sales",
+  },
+];
+
+const DEMO_USER: User = {
+  employee: {
+    id: "demo-employee-001",
+    name: "Demo User",
+    email: "demo@reimburseai.app",
+    wallet_address: "0x742d35Cc6634C0532925a3b844Bc9e7595f36E4B",
+    role: "admin",
+    is_active: true,
+    created_at: new Date().toISOString(),
+  },
+  company: {
+    id: "demo-company-001",
+    name: "Demo Corporation",
+    slug: "demo-corp",
+    email: "admin@democorp.com",
+    vault_address: "0x9D86Af1Fe77969caD642c926CA81447399c1606C",
+    admin_address: "0x742d35Cc6634C0532925a3b844Bc9e7595f36E4B",
+    created_at: new Date().toISOString(),
+  },
+  memberships: DEMO_COMPANIES,
+  activeCompanyId: "demo-company-001",
+};
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const account = useActiveAccount();
   const wallet = useActiveWallet();
-  const { disconnect } = useDisconnect();
 
-  const walletAddress = account?.address || null;
-  const isConnected = !!walletAddress;
+  const isConnected = !!account?.address || isDemo;
+  const walletAddress = account?.address || (isDemo ? DEMO_USER.employee?.wallet_address : null) || null;
+  
+  // Computed properties
+  const activeCompany = user?.company || null;
+  const companies = user?.memberships || [];
 
-  // Fetch user data from backend
   const fetchUserData = useCallback(async (address: string) => {
     setIsLoading(true);
-    setError(null);
-
     try {
-      // Get employee by wallet address
-      const employeeResponse = await employeeApi.getByWallet(address);
+      // Try to find employee by wallet address
+      const employeeResponse = await api.get<Employee>(
+        `/employees/wallet/${address}`
+      );
 
-      if (!employeeResponse.success || !employeeResponse.data) {
-        // User not found - might be new user (wallet connected but not registered)
+      if (employeeResponse.success && employeeResponse.data) {
+        const employee = employeeResponse.data;
+        
+        // Fetch all company memberships
+        const membershipsResponse = await api.get<{
+          memberships: CompanyMembership[];
+          primary_company_id: string | null;
+          total_companies: number;
+        }>(`/memberships/employee/${employee.id}/companies`);
+
+        let memberships: CompanyMembership[] = [];
+        let activeCompanyId: string | null = null;
+        let company: Company | null = null;
+
+        if (membershipsResponse.success && membershipsResponse.data) {
+          memberships = membershipsResponse.data.memberships;
+          activeCompanyId = membershipsResponse.data.primary_company_id || memberships[0]?.company_id;
+          
+          // Get full company data for active company
+          if (activeCompanyId) {
+            const companyResponse = await api.get<Company>(`/companies/${activeCompanyId}`);
+            company = companyResponse.success ? companyResponse.data : null;
+          }
+        } else {
+          // Fallback to old method if memberships API not available
+          const companyResponse = await api.get<Company>(
+            `/companies/${(employee as any).company_id}`
+          );
+          company = companyResponse.success ? companyResponse.data : null;
+          activeCompanyId = company?.id || null;
+        }
+
+        // Set API context
+        if (company && employee) {
+          api.setContext(company.id, employee.id);
+        }
+
         setUser({
-          employee: null,
-          company: null,
-          walletAddress: address,
-          isAdmin: false,
-          isManager: false,
+          employee,
+          company: company || null,
+          memberships,
+          activeCompanyId,
         });
-        return;
+      } else {
+        // User not found - they need to register
+        setUser(null);
       }
-
-      const employee = employeeResponse.data;
-
-      // Set API context for future requests
-      api.setContext(employee.company_id, employee.id);
-
-      // Get company data
-      const companyResponse = await companyApi.getById(employee.company_id);
-      const company = companyResponse.success ? companyResponse.data : null;
-
-      // Determine role based on employee role field
-      const isAdmin = employee.role === "admin";
-      const isManager = employee.role === "manager" || isAdmin;
-
-      setUser({
-        employee,
-        company: company || null,
-        walletAddress: address,
-        isAdmin,
-        isManager,
-      });
-    } catch (err) {
-      // Network error or backend not available - still set wallet as connected
-      console.error("Failed to fetch user data:", err);
-      setUser({
-        employee: null,
-        company: null,
-        walletAddress: address,
-        isAdmin: false,
-        isManager: false,
-      });
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Login - triggered after wallet connection
-  const login = useCallback(async () => {
-    if (!walletAddress) {
-      setError("No wallet connected");
+  const login = useCallback(async (address: string) => {
+    await fetchUserData(address);
+  }, [fetchUserData]);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    setIsDemo(false);
+    api.setContext("", "");
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (isDemo) {
+      setUser(DEMO_USER);
       return;
     }
-    await fetchUserData(walletAddress);
-  }, [walletAddress, fetchUserData]);
-
-  // Logout
-  const logout = useCallback(() => {
-    if (wallet) {
-      disconnect(wallet);
+    if (account?.address) {
+      await fetchUserData(account.address);
     }
+  }, [account?.address, fetchUserData, isDemo]);
+
+  const switchCompany = useCallback(async (companyId: string) => {
+    if (!user?.employee) return;
+
+    if (isDemo) {
+      // Demo mode company switch
+      const membership = DEMO_COMPANIES.find(m => m.company_id === companyId);
+      if (membership) {
+        setUser(prev => ({
+          ...prev!,
+          company: {
+            id: membership.company_id,
+            name: membership.company_name,
+            slug: membership.company_slug,
+            email: `admin@${membership.company_slug}.com`,
+            vault_address: membership.vault_address,
+            created_at: new Date().toISOString(),
+          },
+          activeCompanyId: companyId,
+        }));
+      }
+      return;
+    }
+
+    try {
+      const response = await api.post<{
+        success: boolean;
+        membership: CompanyMembership;
+        message: string;
+      }>("/memberships/switch", {
+        company_id: companyId,
+        set_as_primary: false,
+      });
+
+      if (response.success && response.data) {
+        const membership = response.data.membership;
+        
+        // Fetch full company data
+        const companyResponse = await api.get<Company>(`/companies/${companyId}`);
+        const company = companyResponse.success ? companyResponse.data : null;
+
+        // Update API context
+        if (company) {
+          api.setContext(company.id, user.employee.id);
+        }
+
+        setUser(prev => ({
+          ...prev!,
+          company: company,
+          activeCompanyId: companyId,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to switch company:", error);
+    }
+  }, [user?.employee, isDemo]);
+
+  const addCompany = useCallback(async (companySlug: string): Promise<boolean> => {
+    if (!user?.employee || isDemo) return false;
+
+    try {
+      const response = await api.post<CompanyMembership>("/memberships/join", {
+        company_slug: companySlug,
+      });
+
+      if (response.success && response.data) {
+        // Refresh to get updated memberships
+        await refresh();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Failed to add company:", error);
+      return false;
+    }
+  }, [user?.employee, isDemo, refresh]);
+
+  const enableDemoMode = useCallback(() => {
+    setIsDemo(true);
+    setUser(DEMO_USER);
+    api.setContext(DEMO_USER.company!.id, DEMO_USER.employee!.id);
+    setIsLoading(false);
+  }, []);
+
+  const disableDemoMode = useCallback(() => {
+    setIsDemo(false);
     setUser(null);
-    setError(null);
-    api.setContext("", ""); // Clear API context
-  }, [wallet, disconnect]);
+    api.setContext("", "");
+  }, []);
 
-  // Refresh user data
-  const refreshUser = useCallback(async () => {
-    if (walletAddress) {
-      await fetchUserData(walletAddress);
-    }
-  }, [walletAddress, fetchUserData]);
-
-  // Auto-fetch user data when wallet connects
+  // Auto-login when wallet connects
   useEffect(() => {
-    if (walletAddress) {
-      fetchUserData(walletAddress);
-    } else {
+    if (account?.address && !isDemo) {
+      fetchUserData(account.address);
+    } else if (!account && !isDemo) {
       setUser(null);
       setIsLoading(false);
     }
-  }, [walletAddress, fetchUserData]);
+  }, [account?.address, fetchUserData, isDemo]);
+
+  // Handle wallet disconnect
+  useEffect(() => {
+    if (!wallet && !isDemo) {
+      setUser(null);
+      setIsLoading(false);
+    }
+  }, [wallet, isDemo]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading,
         isConnected,
-        error,
+        isLoading,
+        isDemo,
+        walletAddress,
+        activeCompany,
+        companies,
         login,
         logout,
-        refreshUser,
+        refresh,
+        enableDemoMode,
+        disableDemoMode,
+        switchCompany,
+        addCompany,
       }}
     >
       {children}

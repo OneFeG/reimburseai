@@ -2,11 +2,6 @@
  * Thirdweb Configuration
  * ======================
  * Setup Thirdweb client for wallet connection with In-App Wallets.
- * 
- * Supports:
- * - Email login (passwordless OTP)
- * - Google, Apple, Facebook social login
- * - External wallets (MetaMask, Coinbase, etc.)
  */
 
 import { createThirdwebClient } from "thirdweb";
@@ -30,23 +25,20 @@ export const USDC_ADDRESS = isTestnet
 /**
  * In-App Wallet Configuration
  * Supports email OTP and social logins (Google, Apple, Facebook)
- * This creates embedded wallets - no browser extension needed!
  */
 export const inAppWalletConfig = inAppWallet({
   auth: {
     options: [
-      "email",    // Email OTP (passwordless)
-      "google",   // Google OAuth
-      "apple",    // Apple OAuth
-      "facebook", // Facebook OAuth
-      "phone",    // Phone number OTP
+      "email",
+      "google",
+      "apple",
+      "phone",
     ],
   },
 });
 
 /**
  * Supported external wallets
- * These require browser extensions or mobile apps
  */
 export const externalWallets = [
   createWallet("io.metamask"),
@@ -58,24 +50,24 @@ export const externalWallets = [
 
 /**
  * All supported wallets (in-app + external)
- * Order matters - first ones are shown prominently
  */
 export const supportedWallets = [
-  inAppWalletConfig, // Email & social logins first
+  inAppWalletConfig,
   ...externalWallets,
 ];
 
 /**
+ * Wallet configs for ConnectButton
+ */
+export const walletConfigs = supportedWallets;
+
+/**
  * x402 Payment Configuration
- * Used for audit micropayments
  */
 export const X402_CONFIG = {
-  // Price per audit in USDC (wei - 6 decimals)
   AUDIT_FEE_WEI: 50000n, // $0.05
   AUDIT_FEE_USD: 0.05,
-  // Auditor wallet address (receives payments)
   AUDITOR_WALLET: process.env.NEXT_PUBLIC_AUDITOR_WALLET || "0x2fAC7C9858e07eC8CaaAD17Ff358238BdC95dDeD",
-  // Token
   TOKEN: USDC_ADDRESS,
   CHAIN_ID: isTestnet ? 43113 : 43114,
 };
@@ -86,7 +78,7 @@ export const X402_CONFIG = {
 export function formatUSDC(wei: bigint): string {
   const whole = wei / 1000000n;
   const fraction = wei % 1000000n;
-  return `$${whole}.${fraction.toString().padStart(6, '0').slice(0, 2)}`;
+  return `$${whole}.${fraction.toString().padStart(6, "0").slice(0, 2)}`;
 }
 
 /**

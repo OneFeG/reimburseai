@@ -615,6 +615,182 @@ uv run uvicorn app.main:app --reload --port 8000
 - [x] Wallet Whitelist
 - [x] **Mainnet Configuration** (`USE_MAINNET=true`) ⭐
 
+### Phase 4: Multi-Company & Security (NEW)
+- [x] **Multi-Company Employee Support** - Employees can work with multiple companies ⭐
+- [x] **Cryptographic Audit Signatures** - All audit results are signed ⭐
+- [x] **Rate Limiting** - Prevent abuse and brute force attacks ⭐
+- [x] **Anomaly Detection** - Detect suspicious expense patterns ⭐
+- [x] **Payout Verification** - Comprehensive security checks before payouts ⭐
+- [x] **Security Logging** - Complete audit trail for compliance ⭐
+
+---
+
+## 🔐 Security System
+
+### Overview
+
+The security system protects against both AI Auditor attacks and Treasury attacks:
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                          SECURITY ARCHITECTURE                              │
+│                                                                             │
+│   ┌─────────────────┐        ┌─────────────────┐        ┌────────────────┐ │
+│   │  AI AUDITOR     │        │  SECURITY       │        │   TREASURY     │ │
+│   │                 │───────▶│  SERVICE        │───────▶│                │ │
+│   │ Analyzes        │ Signed │                 │ Verified│ Sends          │ │
+│   │ receipts        │ Result │ • Signatures    │ Auth   │ payments       │ │
+│   │                 │        │ • Rate Limits   │        │                │ │
+│   │ NO money        │        │ • Anomaly Check │        │ NO AI          │ │
+│   │ access          │        │ • Verification  │        │ decisions      │ │
+│   └─────────────────┘        └─────────────────┘        └────────────────┘ │
+│                                                                             │
+│   PROTECTIONS:                                                              │
+│   ✓ Hacked AI cannot steal (no wallet access)                              │
+│   ✓ Hacked Treasury cannot approve (needs signed audit)                    │
+│   ✓ Rate limiting prevents brute force                                     │
+│   ✓ Anomaly detection flags suspicious patterns                            │
+│   ✓ High-value payouts require additional approval                         │
+│                                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Security Features
+
+| Feature | Description | Endpoint |
+|---------|-------------|----------|
+| **Cryptographic Signatures** | All audit results are HMAC-signed with timestamp and nonce | `POST /api/security/audit/sign` |
+| **Rate Limiting** | 10 audits/min, 5 payouts/min per company | `GET /api/security/rate-limit/{resource}/{id}` |
+| **Anomaly Detection** | Velocity, amount deviation, merchant, time-based checks | Automatic during audit |
+| **Payout Verification** | Signature validation, receipt status, daily limits | `POST /api/security/payout/verify` |
+| **Security Logging** | All security events logged for compliance | Automatic |
+
+### Security Thresholds
+
+| Threshold | Value | Action |
+|-----------|-------|--------|
+| High-value expense | $500+ | Requires manager approval |
+| Critical expense | $2,000+ | Requires multisig approval |
+| Daily payout limit | $10,000 | Per company per day |
+| Anomaly score | 0.7+ | Flagged for manual review |
+| Max daily receipts | 20 | Per employee velocity check |
+
+### Security API Endpoints
+
+```bash
+# Sign an audit result
+POST /api/security/audit/sign
+{
+  "receipt_id": "uuid",
+  "company_id": "uuid",
+  "employee_id": "uuid",
+  "amount": "150.00",
+  "merchant": "Amazon",
+  "category": "software",
+  "audit_result": "approved",
+  "confidence": 95.5
+}
+
+# Verify payout is secure
+POST /api/security/payout/verify
+{
+  "receipt_id": "uuid",
+  "company_id": "uuid",
+  "employee_id": "uuid",
+  "amount": "150.00",
+  "recipient_wallet": "0x...",
+  "vault_address": "0x...",
+  "audit_signature": { ... }
+}
+
+# Check rate limit status
+GET /api/security/rate-limit/audit/{company_id}
+
+# Get security configuration
+GET /api/security/config
+```
+
+---
+
+## 👥 Multi-Company Employee Support
+
+Employees can now work with multiple companies simultaneously:
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                     MULTI-COMPANY ARCHITECTURE                              │
+│                                                                             │
+│   ┌─────────────┐                                                          │
+│   │  EMPLOYEE   │                                                          │
+│   │  John Doe   │                                                          │
+│   └──────┬──────┘                                                          │
+│          │                                                                  │
+│          ├─────────────────┬─────────────────┐                             │
+│          ▼                 ▼                 ▼                              │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                     │
+│   │  ACME Corp  │   │  Tech Inc   │   │  Startup Co │                     │
+│   │  (Primary)  │   │  (Manager)  │   │  (Employee) │                     │
+│   │             │   │             │   │             │                     │
+│   │ Admin role  │   │ Manager role│   │ Employee    │                     │
+│   │ Wallet: 0x1 │   │ Wallet: 0x2 │   │ Wallet: 0x1 │                     │
+│   └─────────────┘   └─────────────┘   └─────────────┘                     │
+│                                                                             │
+│   Each membership has:                                                      │
+│   • Separate role (admin/manager/employee)                                  │
+│   • Optional different wallet per company                                   │
+│   • Department and employee number                                          │
+│   • Independent status (active/pending/inactive)                            │
+│                                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Multi-Company API Endpoints
+
+```bash
+# Get all companies an employee belongs to
+GET /api/memberships/employee/{employee_id}/companies
+
+# Switch active company context
+POST /api/memberships/switch
+{
+  "company_id": "uuid",
+  "set_as_primary": false
+}
+
+# Join a new company by code
+POST /api/memberships/join
+{
+  "company_slug": "acme-corp",
+  "wallet_address": "0x..."
+}
+
+# Leave a company
+DELETE /api/memberships/leave/{company_id}
+
+# Set primary company
+PUT /api/memberships/set-primary/{company_id}
+```
+
+### Database Schema
+
+New table `employee_company_memberships`:
+```sql
+CREATE TABLE employee_company_memberships (
+    id UUID PRIMARY KEY,
+    employee_id UUID REFERENCES employees(id),
+    company_id UUID REFERENCES companies(id),
+    role VARCHAR(50) DEFAULT 'employee',
+    status employee_status DEFAULT 'pending',
+    wallet_address VARCHAR(42),
+    department VARCHAR(100),
+    employee_number VARCHAR(50),
+    is_primary BOOLEAN DEFAULT false,
+    notifications_enabled BOOLEAN DEFAULT true,
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(employee_id, company_id)
+);
+```
+
 ## 🤝 Team Collaboration
 
 | Dev | Role | Integration Point |
