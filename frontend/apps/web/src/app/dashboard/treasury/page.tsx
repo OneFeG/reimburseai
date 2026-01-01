@@ -63,7 +63,7 @@ const demoRecentTransactions = [
 ];
 
 export default function TreasuryPage() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [copiedAddress, setCopiedAddress] = useState(false);
 
   const copyAddress = () => {
@@ -73,7 +73,7 @@ export default function TreasuryPage() {
   };
 
   // Only admins can access treasury
-  if (user?.role !== "admin") {
+  if (user?.employee?.role !== "admin" && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

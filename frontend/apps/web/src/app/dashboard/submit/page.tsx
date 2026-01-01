@@ -99,31 +99,50 @@ export default function SubmitExpensePage() {
         });
         setState("complete");
       } else {
-        // Real upload
-        const formData = new FormData();
-        formData.append("file", file);
+        // Real upload - define response types
+        interface UploadResult { receipt_id: string; }
+        interface AuditResult { 
+          audit_result: { 
+            vendor?: string; 
+            amount?: number; 
+            date?: string; 
+            category?: string; 
+            approved?: boolean; 
+            reason?: string; 
+            confidence?: number;
+          }; 
+        }
         
-        const uploadResponse = await apiClient.uploadFile(
+        const uploadResponse = await apiClient.uploadFile<UploadResult>(
           "/receipts/upload",
           file,
-          { employee_id: user?.employeeId }
+          { employee_id: user?.employee?.id || "" }
         );
+
+        if (!uploadResponse.success || !uploadResponse.data) {
+          throw new Error(uploadResponse.error?.message || "Upload failed");
+        }
 
         setState("analyzing");
 
         // Trigger audit
-        const auditResponse = await apiClient.post("/audit/receipt", {
-          receipt_id: uploadResponse.receipt_id,
+        const auditResponse = await apiClient.post<AuditResult>("/audit/receipt", {
+          receipt_id: uploadResponse.data.receipt_id,
         });
 
+        if (!auditResponse.success || !auditResponse.data) {
+          throw new Error(auditResponse.error?.message || "Audit failed");
+        }
+
+        const result = auditResponse.data.audit_result;
         setAuditResult({
-          vendor: auditResponse.audit_result.vendor || "Unknown",
-          amount: auditResponse.audit_result.amount || 0,
-          date: auditResponse.audit_result.date || "",
-          category: auditResponse.audit_result.category || "Other",
-          approved: auditResponse.audit_result.approved || false,
-          reason: auditResponse.audit_result.reason || "",
-          confidence: auditResponse.audit_result.confidence || 0,
+          vendor: result?.vendor || "Unknown",
+          amount: result?.amount || 0,
+          date: result?.date || "",
+          category: result?.category || "Other",
+          approved: result?.approved || false,
+          reason: result?.reason || "",
+          confidence: result?.confidence || 0,
         });
         setState("complete");
       }

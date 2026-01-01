@@ -180,14 +180,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Get full company data for active company
           if (activeCompanyId) {
             const companyResponse = await api.get<Company>(`/companies/${activeCompanyId}`);
-            company = companyResponse.success ? companyResponse.data : null;
+            company = companyResponse.success && companyResponse.data ? companyResponse.data : null;
           }
         } else {
           // Fallback to old method if memberships API not available
           const companyResponse = await api.get<Company>(
             `/companies/${(employee as any).company_id}`
           );
-          company = companyResponse.success ? companyResponse.data : null;
+          company = companyResponse.success && companyResponse.data ? companyResponse.data : null;
           activeCompanyId = company?.id || null;
         }
 
@@ -272,18 +272,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Fetch full company data
         const companyResponse = await api.get<Company>(`/companies/${companyId}`);
-        const company = companyResponse.success ? companyResponse.data : null;
+        const company = companyResponse.success && companyResponse.data ? companyResponse.data : null;
 
         // Update API context
         if (company) {
           api.setContext(company.id, user.employee.id);
         }
 
-        setUser(prev => ({
-          ...prev!,
+        setUser(prev => prev ? {
+          ...prev,
           company: company,
           activeCompanyId: companyId,
-        }));
+        } : null);
       }
     } catch (error) {
       console.error("Failed to switch company:", error);
