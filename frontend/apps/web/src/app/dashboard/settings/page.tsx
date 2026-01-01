@@ -537,6 +537,19 @@ function WalletSettings({ walletAddress, isDemo }: { walletAddress: string | nul
             </div>
             <ExternalLink className="w-5 h-5 text-white/30 group-hover:text-cyan-400 transition-colors" />
           </a>
+          
+          <button className="w-full flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/10 hover:border-purple-400/30 hover:bg-purple-400/5 transition-all group">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-400/10 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-white font-medium">Connect Additional Wallet</p>
+                <p className="text-white/40 text-sm">Link another wallet for receiving payouts</p>
+              </div>
+            </div>
+            <ExternalLink className="w-5 h-5 text-white/30 group-hover:text-purple-400 transition-colors" />
+          </button>
         </div>
       </div>
     </div>
@@ -652,11 +665,25 @@ function SecuritySettings({ isDemo }: { isDemo: boolean }) {
         
         <div className="space-y-3">
           <SecurityOption
+            icon={Key}
+            title="Two-Factor Authentication"
+            description="Add an extra layer of security with authenticator app"
+            action="Enable"
+            color="cyan"
+          />
+          <SecurityOption
             icon={Monitor}
             title="Active Sessions"
             description="View and manage devices logged into your account"
             action="Manage"
             color="purple"
+          />
+          <SecurityOption
+            icon={Wallet}
+            title="Connected Wallets"
+            description="Manage wallets linked to your account"
+            action="View"
+            color="emerald"
           />
           <SecurityOption
             icon={Bell}
