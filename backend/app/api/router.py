@@ -9,6 +9,7 @@ from fastapi import APIRouter
 from app.api import (
     advance,
     audit,
+    auth,
     billing,
     kyb,
     ledger,
@@ -144,4 +145,10 @@ api_router.include_router(
 api_router.include_router(
     waitlist.router,
     tags=["Waitlist"],
+)
+
+# Authentication / 2FA endpoints
+api_router.include_router(
+    auth.router,
+    tags=["Authentication"],
 )

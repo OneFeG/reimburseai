@@ -81,6 +81,10 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = Field(default="")
 
+    # Email (Resend) - for 2FA
+    resend_api_key: str = Field(default="", description="Resend API key for sending emails")
+    from_email: str = Field(default="noreply@reimburse.ai", description="From email address")
+
     # Rate Limiting
     rate_limit_requests: int = Field(default=100)
     rate_limit_window_seconds: int = Field(default=60)

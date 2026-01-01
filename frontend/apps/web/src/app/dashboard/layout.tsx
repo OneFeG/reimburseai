@@ -84,18 +84,18 @@ export default function DashboardLayout({
   const router = useRouter();
   const account = useActiveAccount();
   const { disconnect } = useDisconnect();
-  const { user, isDemo, isAdmin, isLoading, isConnected, logout, disableDemoMode } = useAuth();
+  const { user, isDemo, isAdmin, is2FAVerified, isLoading, isConnected, logout, disableDemoMode } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const isUserAdmin = user?.employee?.role === "admin";
 
-  // Route protection: Allow access for admin wallet OR demo mode OR authenticated users
+  // Route protection: Allow access for admin wallet OR demo mode OR 2FA-verified users
   useEffect(() => {
     if (isLoading) return;
 
-    // Admin wallet = full real access (not demo mode)
+    // Admin wallet = full real access (bypasses 2FA for testing)
     if (isAdmin && account?.address) {
       setIsAuthorized(true);
       return;
@@ -107,16 +107,22 @@ export default function DashboardLayout({
       return;
     }
 
-    // Connected wallet with valid user = authorized
-    if (isConnected && user) {
+    // Regular user must have completed 2FA
+    if (isConnected && user && is2FAVerified) {
       setIsAuthorized(true);
+      return;
+    }
+
+    // Connected but not 2FA verified - redirect to verify
+    if (isConnected && account?.address && !is2FAVerified) {
+      router.push("/verify");
       return;
     }
 
     // Not authorized - redirect to home
     setIsAuthorized(false);
     router.push("/");
-  }, [isDemo, isAdmin, isConnected, user, isLoading, router, account?.address]);
+  }, [isDemo, isAdmin, isConnected, user, is2FAVerified, isLoading, router, account?.address]);
 
   // Show loading state while checking authorization
   if (isLoading || !isAuthorized) {

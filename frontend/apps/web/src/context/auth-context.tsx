@@ -58,6 +58,7 @@ interface AuthContextType {
   isLoading: boolean;
   isDemo: boolean;
   isAdmin: boolean;
+  is2FAVerified: boolean;
   walletAddress: string | null;
   activeCompany: Company | null;
   companies: CompanyMembership[];
@@ -68,6 +69,8 @@ interface AuthContextType {
   disableDemoMode: () => void;
   switchCompany: (companyId: string) => Promise<void>;
   addCompany: (companySlug: string) => Promise<boolean>;
+  complete2FA: (data: any) => void;
+  reset2FA: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+  const [is2FAVerified, setIs2FAVerified] = useState(false);
 
   const account = useActiveAccount();
   const wallet = useActiveWallet();
@@ -221,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     setIsDemo(false);
+    setIs2FAVerified(false);
     api.setContext("", "");
   }, []);
 
@@ -319,8 +324,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const disableDemoMode = useCallback(() => {
     setIsDemo(false);
+    setIs2FAVerified(false);
     setUser(null);
     api.setContext("", "");
+  }, []);
+
+  // Complete 2FA verification
+  const complete2FA = useCallback((data: any) => {
+    setIs2FAVerified(true);
+    // If we got user data from 2FA response, could use it here
+    if (data?.employee_id && data?.employee_name) {
+      // User verified, data available
+      console.log("2FA completed for:", data.employee_name);
+    }
+  }, []);
+
+  // Reset 2FA state (for re-verification)
+  const reset2FA = useCallback(() => {
+    setIs2FAVerified(false);
   }, []);
 
   // Auto-login when wallet connects
@@ -337,6 +358,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!wallet && !isDemo) {
       setUser(null);
+      setIs2FAVerified(false);
       setIsLoading(false);
     }
   }, [wallet, isDemo]);
@@ -349,6 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isDemo,
         isAdmin,
+        is2FAVerified,
         walletAddress,
         activeCompany,
         companies,
@@ -359,6 +382,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         disableDemoMode,
         switchCompany,
         addCompany,
+        complete2FA,
+        reset2FA,
       }}
     >
       {children}

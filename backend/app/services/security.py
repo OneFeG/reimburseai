@@ -78,7 +78,7 @@ class SignatureService:
     """Service for creating and verifying cryptographic signatures."""
     
     def __init__(self, secret_key: str = None):
-        self.secret_key = secret_key or settings.SECRET_KEY
+        self.secret_key = secret_key or settings.secret_key
         if not self.secret_key:
             raise ValueError("SECRET_KEY must be set for signature service")
     

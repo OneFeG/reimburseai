@@ -11,7 +11,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr
 
-from app.db.supabase import get_supabase
+from app.db.supabase import get_supabase_client
 
 router = APIRouter(prefix="/waitlist", tags=["Waitlist"])
 
@@ -47,7 +47,7 @@ async def join_waitlist(signup: WaitlistSignup, request: Request):
     and can optionally send a notification email to contact@reimburseai.app
     """
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_client()
         
         # Get client info
         client_ip = request.client.host if request.client else None
@@ -102,7 +102,7 @@ async def get_waitlist_count():
     Useful for displaying social proof on the landing page.
     """
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_client()
         
         result = supabase.table("waitlist").select("id", count="exact").execute()
         
@@ -122,7 +122,7 @@ async def check_waitlist(email: str):
     Check if an email is already on the waitlist.
     """
     try:
-        supabase = get_supabase()
+        supabase = get_supabase_client()
         
         result = supabase.table("waitlist").select("id, created_at, status").eq("email", email.lower()).execute()
         

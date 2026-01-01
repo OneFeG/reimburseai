@@ -13,16 +13,28 @@ import { useAuth, isAdminWallet } from "@/context/auth-context";
 export default function SignInPage() {
   const router = useRouter();
   const account = useActiveAccount();
-  const { isConnected, user, isDemo, isAdmin } = useAuth();
+  const { isConnected, user, isDemo, isAdmin, is2FAVerified } = useAuth();
 
-  // Redirect to dashboard if:
-  // 1. Admin wallet connected (real testing)
-  // 2. Demo mode active
-  // 3. Regular authenticated user (when app is public)
+  // Redirect logic:
+  // 1. Admin wallet = direct to dashboard (bypasses 2FA for testing)
+  // 2. Wallet connected + not 2FA verified = go to 2FA page
+  // 3. Wallet connected + 2FA verified = go to dashboard
   useEffect(() => {
-    // Admin wallet = immediate dashboard access for real testing
+    // Admin wallet = immediate dashboard access for testing
     if (isAdmin && account?.address) {
       router.push("/dashboard");
+      return;
+    }
+    
+    // Regular wallet connected - need 2FA
+    if (account?.address && !isAdmin) {
+      if (is2FAVerified) {
+        // 2FA already verified, go to dashboard
+        router.push("/dashboard");
+      } else {
+        // Need 2FA verification
+        router.push("/verify");
+      }
       return;
     }
     
@@ -30,12 +42,11 @@ export default function SignInPage() {
     if (isDemo && isConnected && user) {
       router.push("/dashboard");
     }
-  }, [isConnected, user, isDemo, isAdmin, account?.address, router]);
+  }, [isConnected, user, isDemo, isAdmin, is2FAVerified, account?.address, router]);
 
   // Handle wallet connection
   const handleWalletConnect = async () => {
-    // Admin wallet gets redirected via useEffect
-    // Regular users stay on page (app not public yet)
+    // Redirect will happen via useEffect after wallet connects
   };
 
   return (
