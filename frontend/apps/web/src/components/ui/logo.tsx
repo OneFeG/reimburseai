@@ -30,8 +30,7 @@ export function Logo({ className, showText = true, size = "md" }: LogoProps) {
 
       {showText && (
         <span className={cn("font-bold text-white tracking-tight", sizes[size].text)}>
-          Reimburse
-          <span className="text-cyan-400">.ai</span>
+          Reimburse <span className="text-cyan-400">AI</span>
         </span>
       )}
     </div>
