@@ -126,9 +126,9 @@
 │   AUDITOR SERVER WALLET                                      │
 │   Address: 0x2fAC7C9858e07eC8CaaAD17Ff358238BdC95dDeD       │
 │                                                              │
-│   PURPOSE: Receives the $0.05 audit fee per receipt         │
+│   PURPOSE: Receives the $0.50 audit fee per receipt         │
 │                                                              │
-│   (This is how we monetize - each AI audit costs $0.05)     │
+│   (This is how we monetize - each AI audit costs $0.50)     │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -194,7 +194,7 @@ The x402 module handles pay-per-audit micropayments using Thirdweb:
 │                    ▼                                             │
 │   2. Backend returns 402 Payment Required                        │
 │      {                                                           │
-│        "amount": "50000",  // $0.05 USDC (6 decimals)            │
+│        "amount": "500000",  // $0.50 USDC (6 decimals)            │
 │        "recipient": "0x...",  // Auditor wallet                  │
 │        "network": "avalanche-fuji"                               │
 │      }                                                           │

@@ -94,7 +94,7 @@ export function BenefitsSection() {
           </h2>
           <p className="text-lg text-white/50 max-w-2xl mx-auto">
             Whether you're a CFO tracking costs or an employee waiting for reimbursement,
-            Reimburse.ai delivers value at every level.
+            Reimburse AI delivers value at every level.
           </p>
         </motion.div>
 

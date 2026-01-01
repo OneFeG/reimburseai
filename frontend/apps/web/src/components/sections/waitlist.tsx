@@ -117,7 +117,7 @@ export function WaitlistSection() {
                   <textarea
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="Why are you interested in Reimburse.ai? (optional)"
+                    placeholder="Why are you interested in Reimburse AI? (optional)"
                     rows={3}
                     className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 transition-all resize-none"
                     suppressHydrationWarning

@@ -30,7 +30,7 @@ class BillingService:
     """
 
     # Fee configuration
-    AUDIT_FEE_USD = Decimal("0.05")  # $0.05 per audit
+    AUDIT_FEE_USD = Decimal("0.50")  # $0.50 per audit
     ADVANCE_FEE_BPS = 150  # 1.5% on advances
     PLATFORM_FEE_BPS = 50  # 0.5% on payouts
 

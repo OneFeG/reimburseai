@@ -10,8 +10,9 @@ import {
   Building2,
   User,
   ArrowRight,
-  Loader2,
   CheckCircle,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { thirdwebClient, walletConfigs } from "@/lib/thirdweb";
@@ -22,34 +23,20 @@ type AccountType = "company" | "employee" | null;
 export default function SignUpPage() {
   const router = useRouter();
   const account = useActiveAccount();
-  const { enableDemoMode, isConnected, user } = useAuth();
+  const { isConnected, user, isDemo } = useAuth();
   const [accountType, setAccountType] = useState<AccountType>(null);
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect to dashboard if already connected
+  // Only redirect to dashboard if in demo mode (admin access)
   useEffect(() => {
-    if (isConnected && user) {
+    if (isDemo && isConnected && user) {
       router.push("/dashboard");
     }
-  }, [isConnected, user, router]);
+  }, [isConnected, user, isDemo, router]);
 
-  // Handle demo mode sign up
-  const handleDemoSignUp = async () => {
-    setIsLoading(true);
-    
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    enableDemoMode();
-    router.push("/dashboard");
-  };
-
-  // Handle wallet connection success
+  // Handle wallet connection - app not public yet
   const handleWalletConnect = async () => {
-    if (account?.address) {
-      router.push("/dashboard/onboarding");
-    }
+    // For now, stay on page - dashboard access is admin-only via /demo
   };
 
   return (
@@ -97,7 +84,7 @@ export default function SignUpPage() {
                   Get started
                 </h1>
                 <p className="text-white/50 text-center mb-8">
-                  How will you use Reimburse.ai?
+                  How will you use Reimburse AI?
                 </p>
 
                 {/* Account type selection */}
@@ -162,42 +149,28 @@ export default function SignUpPage() {
                     </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className="relative py-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-navy-900 text-white/40">or</span>
+                  {/* Private access notice */}
+                  <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="flex items-start gap-3">
+                      <Lock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-amber-400 text-sm font-medium">Private Beta</p>
+                        <p className="text-white/50 text-xs mt-1">
+                          Access is currently limited to authorized wallets only.
+                          Join the waitlist to get early access.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Demo mode */}
-                  <div>
-                    <label className="block text-white/70 text-sm font-medium mb-2">
-                      Try without a wallet
-                    </label>
-                    <button
-                      onClick={handleDemoSignUp}
-                      disabled={isLoading}
-                      className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Setting up demo...
-                        </>
-                      ) : (
-                        <>
-                          <User className="w-5 h-5" />
-                          Continue as Demo User
-                        </>
-                      )}
-                    </button>
-                    <p className="text-white/30 text-xs text-center mt-2">
-                      Explore with simulated data - no wallet required
-                    </p>
-                  </div>
+                  {/* Waitlist CTA */}
+                  <Link
+                    href="/#waitlist"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 mt-4 text-black font-semibold bg-cyan-400 rounded-xl hover:bg-cyan-300 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Join Waitlist for Early Access
+                  </Link>
                 </div>
 
                 {/* Back button */}

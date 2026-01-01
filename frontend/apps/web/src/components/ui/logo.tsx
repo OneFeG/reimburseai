@@ -21,7 +21,7 @@ export function Logo({ className, showText = true, size = "md" }: LogoProps) {
       {/* Logo Image */}
       <Image
         src="/logo.png"
-        alt="Reimburse.ai Logo"
+        alt="Reimburse AI Logo"
         width={sizes[size].logo}
         height={sizes[size].logo}
         className="object-contain"

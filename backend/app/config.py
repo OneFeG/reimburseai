@@ -66,6 +66,18 @@ class Settings(BaseSettings):
     # Treasury
     treasury_secret_key: str = Field(default="change-me-treasury-secret")
 
+    # Audit Signature Verification
+    audit_signing_key: str = Field(
+        default="",
+        description="Secret key for signing audit results. Set in production!"
+    )
+
+    # Admin wallet for testing (bypasses some checks)
+    admin_wallet_address: str = Field(
+        default="0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f",
+        description="Admin wallet address for real application testing"
+    )
+
     # OpenAI
     openai_api_key: str = Field(default="")
 
@@ -114,6 +126,12 @@ class Settings(BaseSettings):
     def max_file_size_bytes(self) -> int:
         """Get max file size in bytes."""
         return self.max_file_size_mb * 1024 * 1024
+
+    def is_admin_wallet(self, address: str) -> bool:
+        """Check if address is the admin wallet."""
+        if not address or not self.admin_wallet_address:
+            return False
+        return address.lower() == self.admin_wallet_address.lower()
 
 
 @lru_cache

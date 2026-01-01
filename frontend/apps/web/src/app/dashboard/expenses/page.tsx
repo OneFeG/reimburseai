@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Filter,
@@ -12,6 +12,10 @@ import {
   Eye,
   Download,
   ChevronDown,
+  X,
+  Calendar,
+  Tag,
+  FileText,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -110,6 +114,7 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<(typeof demoExpenses)[0] | null>(null);
 
   const filteredExpenses = demoExpenses.filter((expense) => {
     const matchesSearch =
@@ -130,6 +135,134 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Expense Detail Modal */}
+      <AnimatePresence>
+        {selectedExpense && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSelectedExpense(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg bg-navy-800 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h3 className="text-lg font-semibold text-white">Expense Details</h3>
+                <button
+                  onClick={() => setSelectedExpense(null)}
+                  className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal content */}
+              <div className="p-6 space-y-6">
+                {/* Vendor and amount */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                      <Receipt className="w-6 h-6 text-white/30" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-lg">{selectedExpense.vendor}</p>
+                      <p className="text-white/40 text-sm">{selectedExpense.id}</p>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {formatCurrency(selectedExpense.amount)}
+                  </p>
+                </div>
+
+                {/* Status badge */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
+                      selectedExpense.status === "approved"
+                        ? "text-emerald-400 bg-emerald-400/10"
+                        : selectedExpense.status === "pending"
+                        ? "text-amber-400 bg-amber-400/10"
+                        : "text-red-400 bg-red-400/10"
+                    }`}
+                  >
+                    {selectedExpense.status === "approved" && <CheckCircle className="w-4 h-4" />}
+                    {selectedExpense.status === "pending" && <Clock className="w-4 h-4" />}
+                    {selectedExpense.status === "rejected" && <XCircle className="w-4 h-4" />}
+                    {selectedExpense.status.charAt(0).toUpperCase() + selectedExpense.status.slice(1)}
+                  </span>
+                  {selectedExpense.paidOut && (
+                    <span className="px-3 py-1.5 rounded-full text-sm font-medium text-cyan-400 bg-cyan-400/10">
+                      Paid Out
+                    </span>
+                  )}
+                </div>
+
+                {/* Details grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="flex items-center gap-2 text-white/40 text-sm mb-1">
+                      <Tag className="w-4 h-4" />
+                      Category
+                    </div>
+                    <p className="text-white font-medium">{selectedExpense.category}</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                    <div className="flex items-center gap-2 text-white/40 text-sm mb-1">
+                      <Calendar className="w-4 h-4" />
+                      Date
+                    </div>
+                    <p className="text-white font-medium">{selectedExpense.date}</p>
+                  </div>
+                </div>
+
+                {/* Rejection reason */}
+                {selectedExpense.rejectionReason && (
+                  <div className="p-4 rounded-xl bg-red-400/5 border border-red-400/20">
+                    <p className="text-red-400 text-sm font-medium mb-1">Rejection Reason</p>
+                    <p className="text-red-400/70 text-sm">{selectedExpense.rejectionReason}</p>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between text-white/40">
+                    <span>Submitted</span>
+                    <span>{new Date(selectedExpense.submittedAt).toLocaleString()}</span>
+                  </div>
+                  {selectedExpense.approvedAt && (
+                    <div className="flex items-center justify-between text-white/40">
+                      <span>Approved</span>
+                      <span>{new Date(selectedExpense.approvedAt).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal footer */}
+              <div className="flex items-center gap-3 p-6 border-t border-white/10 bg-white/[0.02]">
+                <button
+                  onClick={() => setSelectedExpense(null)}
+                  className="flex-1 btn-secondary"
+                >
+                  Close
+                </button>
+                <button className="flex-1 btn-primary">
+                  <FileText className="w-4 h-4" />
+                  View Receipt
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -226,7 +359,11 @@ export default function ExpensesPage() {
             </div>
           ) : (
             filteredExpenses.map((expense) => (
-              <ExpenseRow key={expense.id} expense={expense} />
+              <ExpenseRow 
+                key={expense.id} 
+                expense={expense} 
+                onView={() => setSelectedExpense(expense)}
+              />
             ))
           )}
         </div>
@@ -274,7 +411,7 @@ function StatBadge({
   );
 }
 
-function ExpenseRow({ expense }: { expense: (typeof demoExpenses)[0] }) {
+function ExpenseRow({ expense, onView }: { expense: (typeof demoExpenses)[0]; onView: () => void }) {
   const statusConfig = {
     approved: {
       icon: CheckCircle,
@@ -338,10 +475,17 @@ function ExpenseRow({ expense }: { expense: (typeof demoExpenses)[0] }) {
 
       {/* Actions */}
       <div className="lg:col-span-2 flex items-center justify-end gap-2">
-        <button className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors">
+        <button 
+          onClick={onView}
+          className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+          title="View details"
+        >
           <Eye className="w-4 h-4" />
         </button>
-        <button className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors">
+        <button 
+          className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+          title="Download receipt"
+        >
           <Download className="w-4 h-4" />
         </button>
       </div>

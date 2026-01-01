@@ -1,5 +1,5 @@
 -- =============================================================================
--- Reimburse.ai Database Schema
+-- Reimburse AI Database Schema
 -- =============================================================================
 -- Version: 1.0.0
 -- Description: Initial database schema for multi-tenant expense reimbursement
@@ -83,7 +83,7 @@ CREATE TABLE companies (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Index for slug lookups (for reimburse.ai/[company_slug])
+-- Index for slug lookups (for Reimburse AI company routes)
 CREATE INDEX idx_companies_slug ON companies(slug);
 CREATE INDEX idx_companies_status ON companies(status);
 

@@ -65,7 +65,7 @@
   - Reserved for company income flows (not used in current demo)
 
 ## Pricing & Settlement
-- Audit fee: flat $0.05 per audit (USDC, 6 decimals → 50,000 base units)
+- Audit fee: flat $0.50 per audit (USDC, 6 decimals → 500,000 base units)
 - Payout amount: pay audited `total` in USDC (roadmap), currently a fixed demo amount
 - x402 steps:
   - Pre-verification: verify signed payment cap before running AI

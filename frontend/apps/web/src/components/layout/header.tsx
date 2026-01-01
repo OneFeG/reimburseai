@@ -67,12 +67,6 @@ export function Header() {
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-3">
               <Link
-                href="/sign-in"
-                className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
                 href="#waitlist"
                 className="group relative inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-black bg-cyan-400 rounded-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/25"
               >
@@ -144,13 +138,6 @@ export function Header() {
               </div>
 
               <div className="mt-8 pt-8 border-t border-white/10 space-y-3">
-                <Link
-                  href="/sign-in"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full px-4 py-3 text-center text-white/70 hover:text-white border border-white/10 rounded-lg transition-colors"
-                >
-                  Sign In
-                </Link>
                 <Link
                   href="#waitlist"
                   onClick={() => setIsMobileMenuOpen(false)}

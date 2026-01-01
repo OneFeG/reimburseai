@@ -9,7 +9,7 @@
  * 3. Client retries with payment header → Server verifies and processes
  * 
  * This creates an "internal micro-economy" where:
- * - Treasury Agent pays Auditor Agent $0.05 per audit
+ * - Treasury Agent pays Auditor Agent $0.50 per audit
  * - Every audit is cryptographically linked to a payment
  * - No rate limiting needed - economics handles it
  */
@@ -22,8 +22,8 @@ import { createHash, randomBytes } from 'crypto';
 
 // x402 Protocol Constants
 export const X402_VERSION = 1;
-export const AUDIT_FEE_WEI = 50000n; // $0.05 in USDC (6 decimals)
-export const AUDIT_FEE_USD = 0.05;
+export const AUDIT_FEE_WEI = 500000n; // $0.50 in USDC (6 decimals)
+export const AUDIT_FEE_USD = 0.50;
 
 export interface PaymentRequirements {
   x402Version: number;
@@ -141,7 +141,7 @@ export class X402PaymentService {
       maxTimeoutSeconds: 300,
       asset: network.usdc.address,
       extra: {
-        name: 'Reimburse.ai Auditor',
+        name: 'Reimburse AI Auditor',
         version: '1.0.0',
         serviceFee: formatUSDC(amount),
       },

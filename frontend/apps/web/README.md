@@ -44,7 +44,7 @@ The ReimburseAI frontend is an Avalanche-inspired enterprise application that pr
 │  │                       BACKEND (FastAPI)                             │ │
 │  │                                                                     │ │
 │  │  /api/upload          Store receipts                                │ │
-│  │  /api/audit           AI analysis ($0.05 via x402)                  │ │
+│  │  /api/audit           AI analysis ($0.50 via x402)                  │ │
 │  │  /api/reimburse       Process payments                              │ │
 │  │  /api/treasury        Vault operations                              │ │
 │  │  /api/ledger          Transaction history                           │ │
@@ -135,7 +135,7 @@ frontend/apps/web/
 ### Prerequisites
 
 - **Node.js 20+** - Required for Next.js 16
-- **pnpm** - Package manager (recommended)
+- **npm** - Package manager
 - **Backend running** - FastAPI at localhost:8000
 
 ### Installation
@@ -145,10 +145,10 @@ frontend/apps/web/
 cd frontend/apps/web
 
 # Install dependencies
-pnpm install
+npm install
 
 # Start development server
-pnpm dev
+npm run dev
 ```
 
 The app will be available at **http://localhost:3000**
@@ -234,7 +234,7 @@ For AI audits, the frontend handles micropayments via x402:
 │                    │                                             │
 │                    ▼                                             │
 │  2. Backend returns 402 Payment Required                         │
-│     { amount: "50000", recipient: "0x..." }                      │
+│     { amount: "500000", recipient: "0x..." }                      │
 │                    │                                             │
 │                    ▼                                             │
 │  3. Frontend prompts user to sign payment                        │
@@ -366,36 +366,36 @@ Accessible without wallet connection:
 
 ```bash
 # Unit tests
-pnpm test
+npm test
 
 # E2E tests
-pnpm test:e2e
+npm run test:e2e
 
 # Type checking
-pnpm type-check
+npm run type-check
 ```
 
 ### Code Quality
 
 ```bash
 # Linting
-pnpm lint
+npm run lint
 
 # Format
-pnpm format
+npm run format
 
 # All checks
-pnpm check
+npm run check
 ```
 
 ### Build for Production
 
 ```bash
 # Build
-pnpm build
+npm run build
 
 # Preview production build
-pnpm start
+npm start
 ```
 
 ---
@@ -444,11 +444,11 @@ vercel
 ```dockerfile
 FROM node:20-alpine
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install
+COPY package.json package-lock.json ./
+RUN npm install
 COPY . .
-RUN pnpm build
-CMD ["pnpm", "start"]
+RUN npm run build
+CMD ["npm", "start"]
 ```
 
 ### Environment Variables for Production

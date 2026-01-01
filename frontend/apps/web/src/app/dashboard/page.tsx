@@ -14,8 +14,6 @@ import {
   Activity,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 
 // Demo data
@@ -97,15 +95,7 @@ const demoActivity = [
 ];
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { isDemo, isConnected } = useAuth();
-
-  useEffect(() => {
-    // Redirect anonymous users to sign-in
-    if (!isDemo && !isConnected) {
-      router.push("/sign-in");
-    }
-  }, [isDemo, isConnected, router]);
+  const { isDemo } = useAuth();
 
   return (
     <div className="space-y-8">

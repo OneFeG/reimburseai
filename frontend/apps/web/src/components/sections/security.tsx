@@ -107,7 +107,7 @@ export function SecuritySection() {
             <span className="text-green-400">Guaranteed.</span>
           </h2>
           <p className="text-lg text-white/50 max-w-3xl mx-auto">
-            We built Reimburse.ai with security-first architecture. From cryptographic 
+            We built Reimburse AI with security-first architecture. From cryptographic 
             signatures to AI anomaly detection, every layer is designed to protect your 
             company's funds and employee data.
           </p>

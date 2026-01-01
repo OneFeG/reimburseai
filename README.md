@@ -65,7 +65,7 @@ ReimburseAI is a complete expense reimbursement platform that uses:
 │  │  ┌─────────────────┐   ┌─────────────────┐   ┌──────────────────┐   │  │
 │  │  │  VAULT FACTORY  │   │  USDC SERVICE   │   │  x402 PAYMENTS   │   │  │
 │  │  │                 │   │                 │   │                  │   │  │
-│  │  │ Deploy company  │   │ Transfer USDC   │   │ $0.05 per audit  │   │  │
+│  │  │  │ Deploy company  │   │ Transfer USDC   │   │ $0.50 per audit  │   │  │
 │  │  │ vaults          │   │ Check balances  │   │ micropayments    │   │  │
 │  │  └─────────────────┘   └─────────────────┘   └──────────────────┘   │  │
 │  │                                                                       │  │
@@ -291,7 +291,7 @@ Features:
 
 ## 💰 x402 Micropayments
 
-AI audits cost $0.05 USDC, paid via the x402 protocol:
+AI audits cost $0.50 USDC, paid via the x402 protocol:
 
 ```
 Client                Backend               Blockchain
@@ -302,7 +302,7 @@ Client                Backend               Blockchain
   │ 402 Payment Required│                      │
   │◀────────────────────│                      │
   │                     │                      │
-  │ Sign & pay $0.05    │                      │
+  │ Sign & pay $0.50    │                      │
   │─────────────────────│─────────────────────▶│
   │                     │                      │
   │ POST + X-PAYMENT    │                      │

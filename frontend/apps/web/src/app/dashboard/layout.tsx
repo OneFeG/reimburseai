@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -20,12 +20,12 @@ import {
   ChevronDown,
   Bell,
   HelpCircle,
-  Home,
+  Shield,
+  Loader2,
 } from "lucide-react";
 import { useActiveAccount, useDisconnect } from "thirdweb/react";
-import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
-import { useAuth } from "@/context/auth-context";
+import { useAuth, isAdminWallet } from "@/context/auth-context";
 import { CompanySwitcher } from "@/components/dashboard/company-switcher";
 import { truncateAddress } from "@/lib/utils";
 
@@ -81,27 +81,85 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const account = useActiveAccount();
   const { disconnect } = useDisconnect();
-  const { user, isDemo, logout } = useAuth();
-  const router = useRouter();
+  const { user, isDemo, isAdmin, isLoading, isConnected, logout, disableDemoMode } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  const isAdmin = user?.employee?.role === "admin";
+  const isUserAdmin = user?.employee?.role === "admin";
 
-  const handleLogout = () => {
-    // Attempt to disconnect wallet if present
-    try {
-      if (account) {
-        disconnect(account as any);
-      }
-    } catch (err) {
-      // ignore disconnect errors
+  // Route protection: Allow access for admin wallet OR demo mode OR authenticated users
+  useEffect(() => {
+    if (isLoading) return;
+
+    // Admin wallet = full real access (not demo mode)
+    if (isAdmin && account?.address) {
+      setIsAuthorized(true);
+      return;
     }
 
-    // Clear auth state and redirect to homepage
-    logout();
+    // Demo mode = testing access (simulated data)
+    if (isDemo) {
+      setIsAuthorized(true);
+      return;
+    }
+
+    // Connected wallet with valid user = authorized
+    if (isConnected && user) {
+      setIsAuthorized(true);
+      return;
+    }
+
+    // Not authorized - redirect to home
+    setIsAuthorized(false);
+    router.push("/");
+  }, [isDemo, isAdmin, isConnected, user, isLoading, router, account?.address]);
+
+  // Show loading state while checking authorization
+  if (isLoading || !isAuthorized) {
+    return (
+      <div className="min-h-screen bg-navy-900 flex items-center justify-center">
+        <div className="text-center">
+          {isLoading ? (
+            <>
+              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-4" />
+              <p className="text-white/50">Loading...</p>
+            </>
+          ) : (
+            <>
+              <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
+              <p className="text-white font-medium mb-2">Access Restricted</p>
+              <p className="text-white/50 text-sm">Redirecting to home...</p>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    
+    // Disconnect wallet if connected
+    if (account) {
+      try {
+        disconnect(account as any);
+      } catch (e) {
+        console.error("Failed to disconnect wallet:", e);
+      }
+    }
+    
+    // Disable demo mode if active
+    if (isDemo) {
+      disableDemoMode();
+    } else {
+      logout();
+    }
+    
+    // Redirect to homepage
     router.push("/");
   };
 
@@ -169,7 +227,8 @@ export default function DashboardLayout({
               />
             ))}
 
-            {isAdmin && (
+            {/* Show admin menu only if: isAdmin (admin wallet) OR user is admin for CURRENT company */}
+            {(isAdmin || isUserAdmin) && (
               <>
                 <div className="mt-6 mb-2 pt-4 border-t border-white/5">
                   <p className="px-3 text-xs font-medium text-white/30 uppercase tracking-wider">
@@ -216,12 +275,6 @@ export default function DashboardLayout({
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Company label */}
-          <div className="hidden md:flex items-center gap-4 ml-4">
-            <div className="text-sm text-white/40">Company</div>
-            <div className="text-white font-medium text-sm">{user?.company?.name || (isDemo ? "Demo Corporation" : "No company")}</div>
-          </div>
-
           {/* Spacer */}
           <div className="flex-1" />
 
@@ -241,15 +294,15 @@ export default function DashboardLayout({
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-purple-400 flex items-center justify-center">
                   <span className="text-white text-sm font-medium">
-                    {isDemo ? "D" : user?.employee?.name?.[0]?.toUpperCase() || "?"}
+                    {isDemo ? "D" : isAdmin ? "A" : user?.employee?.name?.[0]?.toUpperCase() || "?"}
                   </span>
                 </div>
                 <div className="hidden sm:block text-left">
                   <p className="text-white text-sm font-medium">
-                    {isDemo ? "Demo User" : user?.employee?.name || truncateAddress(user?.employee?.wallet_address || "")}
+                    {isDemo ? "Demo User" : isAdmin ? "Admin" : user?.employee?.name || truncateAddress(user?.employee?.wallet_address || "")}
                   </p>
                   <p className="text-white/40 text-xs">
-                    {isAdmin ? "Admin" : "Employee"}
+                    {(isUserAdmin || isAdmin) ? "Admin" : "Employee"}
                   </p>
                 </div>
                 <ChevronDown className="w-4 h-4 text-white/50" />
@@ -261,64 +314,23 @@ export default function DashboardLayout({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-56 py-3 rounded-xl bg-navy-800 border border-white/10 shadow-xl"
+                    className="absolute right-0 mt-2 w-48 py-2 rounded-xl bg-navy-800 border border-white/10 shadow-xl"
                   >
-                    {/* User header */}
-                    <div className="px-4 pb-3 border-b border-white/5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-400 flex items-center justify-center text-white font-medium">
-                          {isDemo ? "D" : user?.employee?.name?.[0]?.toUpperCase() || "?"}
-                        </div>
-                        <div className="text-left">
-                          <div className="text-sm font-medium text-white">{isDemo ? "Demo User" : user?.employee?.name || truncateAddress(user?.employee?.wallet_address || "")}</div>
-                          <div className="text-xs text-white/40">{isDemo ? "demo@reimburseai.app" : user?.employee?.email || user?.company?.name || ""}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="py-2">
-                      <Link
-                        href="/dashboard/settings"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        <Settings className="w-4 h-4" />
-                        Profile & Settings
-                      </Link>
-
-                      <Link
-                        href="/"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        <Home className="w-4 h-4" />
-                        Home
-                      </Link>
-
-                      {isAdmin && (
-                        <Link
-                          href="/dashboard/company"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                        >
-                          <Building2 className="w-4 h-4" />
-                          Company
-                        </Link>
-                      )}
-                    </div>
-
-                    <div className="px-3 pt-2 border-t border-white/5">
-                      <button
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign out
-                      </button>
-                    </div>
+                    <Link
+                      href="/dashboard/settings"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-400/10 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign out
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

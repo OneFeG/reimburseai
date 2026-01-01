@@ -1,5 +1,5 @@
 """
-Reimburse.ai Backend Application
+Reimburse AI Backend Application
 ================================
 AI-powered expense reimbursement platform with blockchain settlement.
 """

@@ -316,14 +316,14 @@ The audit endpoint uses the **x402 micropayment protocol** compatible with Third
   "x402Version": 1,
   "scheme": "exact",
   "network": "avalanche-fuji",
-  "maxAmountRequired": "50000",
+  "maxAmountRequired": "500000",
   "payTo": "0x2fAC...",
   "asset": "0x5425...",
-  "description": "AI-powered receipt audit - $0.05"
+  "description": "AI-powered receipt audit - $0.50"
 }
 ```
 
-**Price:** $0.05 USDC per audit
+**Price:** $0.50 USDC per audit
 
 ### Financial Ledger
 
@@ -545,7 +545,7 @@ USE_MAINNET=true
 THIRDWEB_ENGINE_URL=https://engine.thirdweb.com
 THIRDWEB_SECRET_KEY=your-thirdweb-secret
 THIRDWEB_COMPANY_WALLET_ADDRESS=0x...
-THIRDWEB_AUDITOR_WALLET_ADDRESS=0x...  # Receives $0.05 USDC per audit
+THIRDWEB_AUDITOR_WALLET_ADDRESS=0x...  # Receives $0.50 USDC per audit
 
 # OpenAI for AI Auditor
 OPENAI_API_KEY=sk-...

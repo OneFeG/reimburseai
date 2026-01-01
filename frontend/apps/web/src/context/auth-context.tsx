@@ -57,6 +57,7 @@ interface AuthContextType {
   isConnected: boolean;
   isLoading: boolean;
   isDemo: boolean;
+  isAdmin: boolean;
   walletAddress: string | null;
   activeCompany: Company | null;
   companies: CompanyMembership[];
@@ -70,6 +71,15 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Admin wallet address for testing real application
+export const ADMIN_WALLET_ADDRESS = "0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f";
+
+// Check if a wallet is the admin wallet
+export const isAdminWallet = (address: string | null | undefined): boolean => {
+  if (!address) return false;
+  return address.toLowerCase() === ADMIN_WALLET_ADDRESS.toLowerCase();
+};
 
 // Demo user data for testing
 const DEMO_COMPANIES: CompanyMembership[] = [
@@ -130,6 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const account = useActiveAccount();
   const wallet = useActiveWallet();
 
+  // Check if current wallet is admin
+  const isAdmin = isAdminWallet(account?.address);
+  
+  // Connected if wallet is connected (admin gets special access)
   const isConnected = !!account?.address || isDemo;
   const walletAddress = account?.address || (isDemo ? DEMO_USER.employee?.wallet_address : null) || null;
   
@@ -334,6 +348,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isConnected,
         isLoading,
         isDemo,
+        isAdmin,
         walletAddress,
         activeCompany,
         companies,

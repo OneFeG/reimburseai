@@ -51,8 +51,8 @@ class X402Service:
     X402_VERSION = 1
 
     # Payment configuration
-    PRICE_PER_AUDIT_USD = Decimal("0.05")  # $0.05 per audit
-    PRICE_PER_AUDIT_WEI = 50000  # $0.05 in USDC (6 decimals)
+    PRICE_PER_AUDIT_USD = Decimal("0.50")  # $0.50 per audit
+    PRICE_PER_AUDIT_WEI = 500000  # $0.50 in USDC (6 decimals)
 
     def __init__(self):
         """Initialize x402 service with Thirdweb configuration."""
@@ -130,7 +130,7 @@ class X402Service:
             "asset": self.usdc_token_address,
             "outputSchema": None,
             "extra": {
-                "name": "Reimburse.ai Audit Service",
+                "name": "Reimburse AI Audit Service",
                 "version": "1.0.0",
                 "priceUsd": str(amount),
             },
@@ -333,7 +333,7 @@ class X402Service:
             payment_header: The X-Payment header value
             resource_url: The URL of the resource being accessed
             method: HTTP method used
-            price: Price in USD string format (e.g., "$0.05")
+            price: Price in USD string format (e.g., "$0.50")
             
         Returns:
             Settlement result from Thirdweb facilitator

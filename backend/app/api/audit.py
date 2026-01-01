@@ -98,7 +98,7 @@ async def audit_receipt(
         resource_url = str(request.url)
         payment_requirements = x402_service.generate_payment_requirements(
             resource=resource_url,
-            description="AI-powered receipt audit service - $0.05 per audit",
+            description="AI-powered receipt audit service - $0.50 per audit",
         )
         
         # The response body should contain all payment requirements

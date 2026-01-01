@@ -144,7 +144,7 @@ export function HeroSection() {
             />
             <Stat
               icon={<DollarSign className="w-5 h-5 text-cyan-400" />}
-              value="$0.05"
+              value="$0.50"
               label="Per Receipt Audit Cost"
             />
           </motion.div>

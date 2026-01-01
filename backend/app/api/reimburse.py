@@ -21,6 +21,11 @@ from app.services.employee import EmployeeService
 from app.services.ledger import ledger_service
 from app.services.policy import PolicyService
 from app.services.receipt import receipt_service
+from app.services.signature import (
+    SignatureVerificationError,
+    TamperDetectedError,
+    signature_service,
+)
 from app.services.storage import StorageService
 from app.services.thirdweb import ThirdwebError, thirdweb_service
 from app.services.whitelist import whitelist_service
@@ -164,7 +169,17 @@ async def process_reimbursement(body: ReimbursementRequest):
     amount_usd = extracted.get("amount_usd", 0)
     decision_reason = validation.get("decision_reason", "Unknown")
 
-    # Update receipt with audit result
+    # Step 4.5: Create cryptographic signature of audit result
+    # This provides tamper detection and non-repudiation
+    audit_certificate = signature_service.create_audit_certificate(
+        receipt_id=body.receipt_id,
+        audit_result=audit_result,
+        company_id=body.company_id,
+        employee_id=body.employee_id,
+    )
+    logger.info(f"Created audit certificate for receipt {body.receipt_id}")
+
+    # Update receipt with audit result and signature
     new_status = "approved" if is_approved else "rejected"
     await receipt_service.update_receipt_status(
         receipt_id=body.receipt_id,
@@ -174,6 +189,8 @@ async def process_reimbursement(body: ReimbursementRequest):
             "validation": validation,
             "confidence": audit_result.get("confidence"),
             "audited_at": audit_result.get("audited_at"),
+            "signature": audit_certificate["signature"],
+            "certificate": audit_certificate,
         },
     )
 
@@ -187,7 +204,25 @@ async def process_reimbursement(body: ReimbursementRequest):
             decision_reason=decision_reason,
         )
 
-    # Step 5: Initiate payout
+    # Step 5: Verify audit signature before payout (tamper detection)
+    try:
+        signature_service.verify_audit_signature(
+            receipt_id=body.receipt_id,
+            audit_result=audit_result,
+            signature_envelope=audit_certificate["signature"],
+        )
+        logger.info(f"Audit signature verified for receipt {body.receipt_id}")
+    except TamperDetectedError as e:
+        logger.error(f"SECURITY: Tamper detected for receipt {body.receipt_id}: {e}")
+        raise HTTPException(
+            status_code=403,
+            detail="Audit result verification failed - potential tampering detected"
+        )
+    except SignatureVerificationError as e:
+        logger.error(f"Signature verification error: {e}")
+        raise HTTPException(status_code=500, detail=f"Signature verification failed: {str(e)}")
+
+    # Step 6: Initiate payout
     payout_queue_id = None
     try:
         transfer_result = await thirdweb_service.transfer_usdc(
@@ -224,7 +259,7 @@ async def process_reimbursement(body: ReimbursementRequest):
         )
         raise HTTPException(status_code=500, detail=f"Receipt approved but payout failed: {str(e)}")
 
-    # Step 6: Create ledger entry
+    # Step 7: Create ledger entry
     ledger_entry = await ledger_service.create_entry(
         company_id=body.company_id,
         employee_id=body.employee_id,

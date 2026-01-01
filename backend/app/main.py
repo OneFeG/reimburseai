@@ -1,5 +1,5 @@
 """
-Reimburse.ai Backend - FastAPI Application
+Reimburse AI Backend - FastAPI Application
 ==========================================
 Main entry point for the API server.
 """
@@ -46,11 +46,11 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Reimburse.ai API",
+    title="Reimburse AI API",
     description="""
     ## AI-Powered Expense Reimbursement Platform
 
-    This API provides the backend for Reimburse.ai, enabling:
+    This API provides the backend for Reimburse AI, enabling:
 
     - **Receipt Upload**: Employees upload expense receipts
     - **AI Auditing**: Automated receipt verification via x402 protocol
@@ -114,7 +114,7 @@ async def favicon():
 async def root():
     """Root endpoint - API information."""
     return {
-        "name": "Reimburse.ai API",
+        "name": "Reimburse AI API",
         "version": "1.0.0",
         "status": "running",
         "docs": "/docs" if settings.debug else "disabled",

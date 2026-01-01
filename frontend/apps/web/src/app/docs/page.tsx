@@ -79,6 +79,10 @@ export default function DocsPage() {
       <header className="sticky top-0 z-50 bg-navy-900/80 backdrop-blur-xl border-b border-white/5">
         <div className="container-custom flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Home</span>
+            </Link>
             <Link href="/" className="flex items-center gap-2">
               <Logo className="h-8" />
             </Link>
@@ -157,10 +161,10 @@ export default function DocsPage() {
               {/* Content */}
               <article className="prose prose-invert max-w-none">
                 <h1 className="text-4xl font-bold text-white mb-4">
-                  Welcome to Reimburse.ai
+                  Welcome to Reimburse AI
                 </h1>
                 <p className="text-lg text-white/60 mb-8">
-                  Reimburse.ai is an AI-powered expense management platform that automates
+                  Reimburse AI is an AI-powered expense management platform that automates
                   receipt auditing and enables instant USDC payouts on Avalanche.
                 </p>
 
@@ -284,7 +288,7 @@ curl -X POST https://api.reimburseai.app/audit/receipt \\
 
 # The X-Payment header contains:
 # - ERC-3009 authorization signature
-# - Payment amount (0.05 USDC per audit)
+# - Payment amount (0.50 USDC per audit)
 # - Nonce for replay protection`}
                   onCopy={copyCode}
                   isCopied={copiedCode === "example-3"}

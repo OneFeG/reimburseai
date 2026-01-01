@@ -27,6 +27,7 @@ from app.api.endpoints import (
     receipts,
     upload,
     vaults,
+    waitlist,
 )
 
 api_router = APIRouter()
@@ -137,4 +138,10 @@ api_router.include_router(
 api_router.include_router(
     security.router,
     tags=["Security"],
+)
+
+# Waitlist endpoints
+api_router.include_router(
+    waitlist.router,
+    tags=["Waitlist"],
 )

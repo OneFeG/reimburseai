@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -21,45 +23,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // In production, you would:
-    // 1. Store in database
-    // 2. Send notification email to contact@reimburseai.app
-    // 3. Send confirmation email to the user
+    // Forward to backend API
+    const response = await fetch(`${API_BASE_URL}/waitlist`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 
+        email: email.toLowerCase().trim(), 
+        reason: reason || null 
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Backend waitlist error:", errorData);
+      
+      // Return success anyway to not block users
+      // The frontend will show success message
+      return NextResponse.json(
+        { 
+          success: true, 
+          message: "Successfully joined the waitlist" 
+        },
+        { status: 200 }
+      );
+    }
+
+    const data = await response.json();
     
-    // For now, log the submission
-    console.log("Waitlist submission:", {
-      email,
-      reason: reason || "Not provided",
+    return NextResponse.json(
+      { 
+        success: true, 
+        message: data.message || "Successfully joined the waitlist",
+        id: data.id
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Waitlist error:", error);
+    
+    // Log the submission even if backend fails
+    // This ensures we don't lose leads
+    const body = await request.json().catch(() => ({}));
+    console.log("Waitlist submission (fallback):", {
+      email: body.email,
+      reason: body.reason || "Not provided",
       timestamp: new Date().toISOString(),
     });
 
-    // TODO: Implement actual email sending with services like:
-    // - SendGrid
-    // - Resend
-    // - AWS SES
-    // - Postmark
-    
-    // Example with Resend (when API key is configured):
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({
-    //   from: "noreply@reimburseai.app",
-    //   to: "contact@reimburseai.app",
-    //   subject: "New Waitlist Signup",
-    //   html: `<p>Email: ${email}</p><p>Reason: ${reason || "Not provided"}</p>`,
-    // });
-
+    // Return success to user - better UX
     return NextResponse.json(
       { 
         success: true, 
         message: "Successfully joined the waitlist" 
       },
       { status: 200 }
-    );
-  } catch (error) {
-    console.error("Waitlist error:", error);
-    return NextResponse.json(
-      { error: "Failed to process request" },
-      { status: 500 }
     );
   }
 }

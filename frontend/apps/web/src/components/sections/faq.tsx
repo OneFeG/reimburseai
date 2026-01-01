@@ -36,9 +36,9 @@ const faqs = [
       "All payments are made in USDC on Avalanche. USDC is a stablecoin backed 1:1 by US dollars, so there's no crypto volatility. We're exploring support for additional stablecoins like EURC for European companies.",
   },
   {
-    question: "How much does Reimburse.ai cost?",
+    question: "How much does Reimburse AI cost?",
     answer:
-      "We charge $0.05 per receipt processed. No monthly fees, no per-seat pricing, no minimums. You only pay for what you use. Early waitlist members get founding pricing with additional discounts.",
+      "We charge $0.50 per receipt processed. No monthly fees, no per-seat pricing, no minimums. You only pay for what you use. Early waitlist members get founding pricing with additional discounts.",
   },
   {
     question: "Can I customize expense policies?",
@@ -89,7 +89,7 @@ export function FAQSection() {
             <span className="gradient-text">questions</span>
           </h2>
           <p className="text-lg text-white/50 max-w-2xl mx-auto">
-            Everything you need to know about Reimburse.ai.
+            Everything you need to know about Reimburse AI.
             Can't find what you're looking for?{" "}
             <a
               href="mailto:contact@reimburseai.app"
