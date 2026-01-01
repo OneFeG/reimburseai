@@ -222,7 +222,29 @@ async def process_reimbursement(body: ReimbursementRequest):
         logger.error(f"Signature verification error: {e}")
         raise HTTPException(status_code=500, detail=f"Signature verification failed: {str(e)}")
 
-    # Step 6: Initiate payout
+    # Step 6: CRITICAL - Re-verify whitelist immediately before transfer
+    # This prevents payouts if employee was removed from whitelist after approval
+    is_still_whitelisted = await whitelist_service.is_wallet_whitelisted(
+        wallet_address=employee_wallet,
+        company_id=body.company_id,
+    )
+    if not is_still_whitelisted:
+        logger.warning(
+            f"SECURITY: Wallet {employee_wallet} was removed from whitelist between "
+            f"approval and payout for receipt {body.receipt_id}"
+        )
+        # Update receipt status to reflect the issue
+        await receipt_service.update_receipt_status(
+            receipt_id=body.receipt_id,
+            status="approved",  # Keep approved, but payout blocked
+            payout_info={"error": "Wallet removed from whitelist before payout"},
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Employee wallet is no longer whitelisted - payout blocked"
+        )
+
+    # Step 7: Initiate payout
     payout_queue_id = None
     try:
         transfer_result = await thirdweb_service.transfer_usdc(
@@ -259,7 +281,7 @@ async def process_reimbursement(body: ReimbursementRequest):
         )
         raise HTTPException(status_code=500, detail=f"Receipt approved but payout failed: {str(e)}")
 
-    # Step 7: Create ledger entry
+    # Step 8: Create ledger entry
     ledger_entry = await ledger_service.create_entry(
         company_id=body.company_id,
         employee_id=body.employee_id,
