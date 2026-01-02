@@ -79,8 +79,6 @@ reimburse.ai/
 ├── frontend/          # Next.js web application
 ├── backend/           # Python FastAPI backend
 ├── Web3/              # Blockchain integration
-├── docs/              # Documentation
-└── scripts/           # Utility scripts
 ```
 
 ---
@@ -134,7 +132,6 @@ Companies control how receipts are verified:
 
 ## 🚢 Deployment
 
-See [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) for deployment instructions.
 
 ```bash
 # Docker deployment
@@ -145,8 +142,6 @@ docker-compose up -d
 
 ## 📚 Documentation
 
-- [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) - Launch checklist
-- [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) - Deployment guide
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute
 - [SECURITY.md](./SECURITY.md) - Security policies
 
