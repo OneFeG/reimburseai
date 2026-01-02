@@ -31,11 +31,11 @@ const features = [
   },
   {
     icon: Shield,
-    title: "Fraud Prevention",
+    title: "Enterprise Security",
     description:
-      "Advanced AI detects duplicate receipts, altered amounts, and policy violations before they cost you money.",
+      "Two-factor authentication, AI fraud detection, and duplicate receipt prevention. Every transaction is cryptographically signed.",
     color: "emerald",
-    stats: "Zero false approvals",
+    stats: "2FA + fraud detection",
   },
   {
     icon: FileCheck,

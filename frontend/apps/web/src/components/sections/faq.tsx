@@ -54,7 +54,7 @@ const faqs = [
   {
     question: "Is my data secure?",
     answer:
-      "Receipt images are encrypted at rest and in transit. We process images for data extraction and immediately delete them. We never train AI models on your data. All sensitive information is stored with AES-256 encryption.",
+      "Yes. We implement enterprise-grade security including two-factor authentication (2FA) via email for all accounts, AES-256 encryption for sensitive data, and cryptographic signatures for all transactions. Receipt images are encrypted at rest and in transit. We never train AI models on your data.",
   },
   {
     question: "How do I get started with Reimburse AI?",

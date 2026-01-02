@@ -116,7 +116,7 @@ export function BenefitsSection() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {companyBenefits.map((benefit, index) => (
                 <BenefitCard key={benefit.title} benefit={benefit} index={index} color="cyan" />
               ))}
@@ -139,7 +139,7 @@ export function BenefitsSection() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               {employeeBenefits.map((benefit, index) => (
                 <BenefitCard key={benefit.title} benefit={benefit} index={index} color="purple" />
               ))}
@@ -203,7 +203,7 @@ function BenefitCard({
 
   return (
     <div
-      className={`group flex gap-4 p-5 rounded-xl border min-h-[100px] ${colorClasses[color]} transition-all duration-300`}
+      className={`group flex gap-4 p-5 rounded-xl border h-[110px] ${colorClasses[color]} transition-all duration-300`}
     >
       <div
         className={`flex-shrink-0 w-10 h-10 rounded-lg ${iconClasses[color]} flex items-center justify-center`}

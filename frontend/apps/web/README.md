@@ -9,7 +9,7 @@
 ### Prerequisites
 
 - Node.js 20+
-- npm or pnpm
+- npm
 - Backend API running
 
 ### Installation

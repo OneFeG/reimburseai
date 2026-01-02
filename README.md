@@ -43,7 +43,7 @@ ReimburseAI is a modern expense management platform that transforms how companie
 
 - Node.js 20+
 - Python 3.11+
-- pnpm (recommended)
+- npm
 
 ### Development Setup
 
@@ -54,17 +54,18 @@ cd reimburse-ai
 
 # Backend
 cd backend
-python -m venv .venv
+pip install uv
+uv venv
 .\.venv\Scripts\Activate.ps1  # Windows
-pip install -e .
+uv pip install -e .
 cp .env.example .env
-python run.py
+uv run python run.py
 
 # Frontend (new terminal)
 cd frontend/apps/web
-pnpm install
+npm install
 cp .env.example .env.local
-pnpm dev
+npm run dev
 ```
 
 - Backend: http://localhost:8000

@@ -15,20 +15,23 @@
 ```bash
 cd backend
 
+# Install uv (if not already installed)
+pip install uv
+
 # Create virtual environment
-python -m venv .venv
+uv venv
 .\.venv\Scripts\Activate.ps1  # Windows
 # source .venv/bin/activate   # Linux/Mac
 
 # Install dependencies
-pip install -e .
+uv pip install -e .
 
 # Configure environment
 cp .env.example .env
 # Edit .env with your credentials
 
 # Run server
-python run.py
+uv run python run.py
 ```
 
 Server runs at **http://localhost:8000**  
@@ -119,9 +122,9 @@ Run migrations in Supabase SQL Editor:
 ## 🧪 Testing
 
 ```bash
-pytest                    # Run all tests
-pytest --cov=app         # With coverage
-pytest tests/test_health.py -v  # Specific test
+uv run pytest                    # Run all tests
+uv run pytest --cov=app         # With coverage
+uv run pytest tests/test_health.py -v  # Specific test
 ```
 
 ---

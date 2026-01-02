@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Mail, Shield, Loader2, ArrowLeft, RefreshCw, CheckCircle } from "lucide-react";
+import { Mail, Shield, Loader2, ArrowLeft, RefreshCw, CheckCircle, AlertTriangle, UserX } from "lucide-react";
 import { useActiveAccount } from "thirdweb/react";
 import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/context/auth-context";
@@ -24,6 +24,14 @@ interface TwoFAVerifyResponse {
   companies?: Array<{ id: string; name: string; role: string }>;
 }
 
+// Error types for specific handling
+type ErrorType = "no_account" | "no_email" | "generic";
+
+interface ErrorState {
+  type: ErrorType;
+  message: string;
+}
+
 export default function Verify2FAPage() {
   const router = useRouter();
   const account = useActiveAccount();
@@ -34,11 +42,23 @@ export default function Verify2FAPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null);
   const [success, setSuccess] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Helper to determine error type from message
+  const parseErrorType = (message: string): ErrorType => {
+    const lowerMsg = message.toLowerCase();
+    if (lowerMsg.includes("no account found") || lowerMsg.includes("not found")) {
+      return "no_account";
+    }
+    if (lowerMsg.includes("no email registered") || lowerMsg.includes("no email")) {
+      return "no_email";
+    }
+    return "generic";
+  };
 
   // Request 2FA code when page loads
   useEffect(() => {
@@ -76,11 +96,18 @@ export default function Verify2FAPage() {
         setEmailHint(response.data.email_hint || null);
         setCodeSent(true);
       } else {
-        setError(response.error?.message || "Failed to send verification code");
+        const errorMsg = response.error?.message || response.error?.toString() || "Failed to send verification code";
+        setError({
+          type: parseErrorType(errorMsg),
+          message: errorMsg,
+        });
       }
     } catch (err: any) {
-      const message = err.response?.data?.detail || "Failed to send verification code";
-      setError(message);
+      const message = err.response?.data?.detail || err.message || "Failed to send verification code";
+      setError({
+        type: parseErrorType(message),
+        message,
+      });
     } finally {
       setIsSending(false);
     }
@@ -102,11 +129,18 @@ export default function Verify2FAPage() {
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       } else {
-        setError(response.error?.message || "Failed to resend code");
+        const errorMsg = response.error?.message || response.error?.toString() || "Failed to resend code";
+        setError({
+          type: parseErrorType(errorMsg),
+          message: errorMsg,
+        });
       }
     } catch (err: any) {
-      const message = err.response?.data?.detail || "Failed to resend code";
-      setError(message);
+      const message = err.response?.data?.detail || err.message || "Failed to resend code";
+      setError({
+        type: parseErrorType(message),
+        message,
+      });
     } finally {
       setIsResending(false);
     }
@@ -117,7 +151,10 @@ export default function Verify2FAPage() {
     
     const fullCode = code.join("");
     if (fullCode.length !== 6) {
-      setError("Please enter the complete 6-digit code");
+      setError({
+        type: "generic",
+        message: "Please enter the complete 6-digit code",
+      });
       return;
     }
     
@@ -143,14 +180,21 @@ export default function Verify2FAPage() {
           router.push("/dashboard");
         }, 1000);
       } else {
-        setError(response.error?.message || "Verification failed");
+        const errorMsg = response.error?.message || response.error?.toString() || "Verification failed";
+        setError({
+          type: parseErrorType(errorMsg),
+          message: errorMsg,
+        });
         // Clear code on error
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       }
     } catch (err: any) {
-      const message = err.response?.data?.detail || "Verification failed";
-      setError(message);
+      const message = err.response?.data?.detail || err.message || "Verification failed";
+      setError({
+        type: parseErrorType(message),
+        message,
+      });
       // Clear code on error
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
@@ -252,11 +296,69 @@ export default function Verify2FAPage() {
           </div>
 
           {/* Loading state */}
-          {isSending && !codeSent && (
+          {isSending && !codeSent && !error && (
             <div className="flex flex-col items-center gap-4 py-8">
               <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
               <p className="text-white/50">Sending verification code...</p>
             </div>
+          )}
+
+          {/* Account/Email Error State - Shows when no account or no email */}
+          {!codeSent && !isSending && error && (error.type === "no_account" || error.type === "no_email") && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="py-6"
+            >
+              {/* Error Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-red-400/10 flex items-center justify-center border border-red-400/20">
+                  {error.type === "no_account" ? (
+                    <UserX className="w-8 h-8 text-red-400" />
+                  ) : (
+                    <AlertTriangle className="w-8 h-8 text-amber-400" />
+                  )}
+                </div>
+              </div>
+
+              {/* Error Message */}
+              <div className="text-center mb-6">
+                <h2 className="text-lg font-semibold text-white mb-2">
+                  {error.type === "no_account" ? "Account Not Found" : "Email Not Registered"}
+                </h2>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  {error.message}
+                </p>
+              </div>
+
+              {/* Help Box */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <p className="text-white/70 text-sm text-center">
+                  {error.type === "no_account" ? (
+                    <>
+                      Your wallet is not registered in our system. Please contact your company administrator to add you as an employee, or{" "}
+                      <a href="/#waitlist" className="text-cyan-400 hover:text-cyan-300 underline">
+                        join our waitlist
+                      </a>
+                      {" "}if your company hasn't signed up yet.
+                    </>
+                  ) : (
+                    <>
+                      Your account exists but has no email address registered. Please contact your company administrator to update your profile with a valid email address.
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {/* Retry button */}
+              <button
+                onClick={requestCode}
+                className="w-full mt-6 btn-secondary h-12 text-base"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </button>
+            </motion.div>
           )}
 
           {/* Success state */}
@@ -284,7 +386,7 @@ export default function Verify2FAPage() {
                     exit={{ opacity: 0, y: -10 }}
                     className="mb-6 p-4 rounded-xl bg-red-400/10 border border-red-400/20"
                   >
-                    <p className="text-red-400 text-sm text-center">{error}</p>
+                    <p className="text-red-400 text-sm text-center">{error.message}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -348,14 +450,14 @@ export default function Verify2FAPage() {
             </>
           )}
 
-          {/* Back to sign in */}
+          {/* Back button - changes based on error state */}
           <div className="mt-8 pt-6 border-t border-white/10">
             <button
-              onClick={() => router.push("/sign-in")}
+              onClick={() => router.push(error && (error.type === "no_account" || error.type === "no_email") ? "/" : "/sign-in")}
               className="w-full flex items-center justify-center gap-2 text-white/50 hover:text-white text-sm transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Sign In
+              {error && (error.type === "no_account" || error.type === "no_email") ? "Back to Home" : "Back to Sign In"}
             </button>
           </div>
         </div>
