@@ -33,7 +33,7 @@ The ReimburseAI frontend is an Avalanche-inspired enterprise application that pr
 │  │  /dashboard/expenses  Expense management                            │ │
 │  │  /dashboard/history   Payment history                               │ │
 │  │  /dashboard/treasury  Company vault management                      │ │
-│  │  /dashboard/settings  User preferences                              │ │
+│  │  /dashboard/settings  User & company settings (verification mode)   │ │
 │  │  /demo                Interactive demo walkthrough                  │ │
 │  │  /docs                Technical documentation                       │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
@@ -46,6 +46,7 @@ The ReimburseAI frontend is an Avalanche-inspired enterprise application that pr
 │  │  /api/upload          Store receipts                                │ │
 │  │  /api/audit           AI analysis ($0.50 via x402)                  │ │
 │  │  /api/reimburse       Process payments                              │ │
+│  │  /api/reimburse/daily-limit  Check daily upload limits ⭐ NEW       │ │
 │  │  /api/treasury        Vault operations                              │ │
 │  │  /api/ledger          Transaction history                           │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
@@ -320,7 +321,47 @@ The design follows these principles:
 - **Expenses** - Expense list with status badges
 - **History** - Payment transaction history
 - **Treasury** - Vault balance and deposits
-- **Settings** - User preferences
+- **Settings** - User & company preferences
+
+### Settings Page (`/dashboard/settings`) ⭐ NEW
+
+The settings page includes **Verification Mode** configuration for companies:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    VERIFICATION MODE                             │
+│                                                                  │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │   ⚡ AUTONOMOUS       │  │   👁️ HUMAN REVIEW     │          │
+│  │                       │  │                       │          │
+│  │  AI auto-processes    │  │  All receipts need    │          │
+│  │  all receipts         │  │  manual approval      │          │
+│  │                       │  │                       │          │
+│  │  ✅ Fast payouts      │  │  ✅ Maximum control   │          │
+│  │  ✅ No delays         │  │  ✅ Human oversight   │          │
+│  └───────────────────────┘  └───────────────────────┘          │
+│                                                                  │
+│  Daily Receipt Limit: [ - ] 5 [ + ]                             │
+│  Employees can upload up to 5 receipts per day.                 │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Features:**
+- Toggle between **Autonomous** and **Human Verification** modes
+- Set **daily receipt limits** (1-50 per employee)
+- Real-time limit tracking with visual counter
+- Prevents abuse while maintaining flexibility
+
+**Usage:**
+```typescript
+// Settings are stored in company policies
+// UI components in: src/app/dashboard/settings/page.tsx
+
+// Company Settings state
+const [verificationMode, setVerificationMode] = useState<'autonomous' | 'human_verification'>('autonomous');
+const [dailyLimit, setDailyLimit] = useState(3);
+```
 
 ### Demo Mode
 

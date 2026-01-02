@@ -245,6 +245,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 4. Run the migrations in order:
    - `migrations/001_initial_schema.sql`
    - `migrations/002_storage_policies.sql`
+   - `migrations/003_additional_tables_fixed.sql`
+   - `migrations/004_billing_tables_fixed.sql`
+   - `migrations/005_vault_admin_address.sql`
+   - `migrations/006_fix_rls_policies.sql`
+   - `migrations/007_update_ledger_schema.sql`
+   - `migrations/008_waitlist_table.sql`
+   - `migrations/009_multi_company_employees.sql`
+   - `migrations/010_verification_mode.sql` ⭐ NEW
 
 ### 5. Run the Server
 
@@ -396,6 +404,53 @@ The audit endpoint uses the **x402 micropayment protocol** compatible with Third
 | `POST` | `/api/reimburse/process` | **Full audit→payout flow** ⭐ |
 | `POST` | `/api/reimburse/upload-and-process` | Upload + process in one call |
 | `GET` | `/api/reimburse/status/{receipt_id}` | Get reimbursement status |
+| `GET` | `/api/reimburse/daily-limit/{company_id}/{employee_id}` | **Check daily upload limit** ⭐ |
+
+### Verification Mode & Daily Limits ⭐ NEW
+
+Companies can configure how receipts are processed:
+
+| Mode | Description |
+|------|-------------|
+| `autonomous` | AI auto-approves receipts (default) |
+| `human_verification` | All receipts flagged for manual review |
+
+**Daily Limit Endpoint:**
+
+```bash
+GET /api/reimburse/daily-limit/{company_id}/{employee_id}
+
+# Response
+{
+  "can_upload": true,
+  "current_count": 2,
+  "daily_limit": 5,
+  "remaining_uploads": 3,
+  "verification_mode": "autonomous",
+  "requires_human_review": false
+}
+```
+
+**Upload Response (when limit reached):**
+
+```json
+{
+  "detail": "Daily receipt limit reached (5/5). Try again tomorrow.",
+  "current_count": 5,
+  "daily_limit": 5,
+  "remaining_uploads": 0
+}
+```
+
+**Policy Configuration:**
+
+```python
+# Set via PUT /api/policies/{policy_id}
+{
+  "verification_mode": "autonomous",  # or "human_verification"
+  "daily_receipt_limit": 5            # 1-50 receipts per day
+}
+```
 
 ### Health
 
