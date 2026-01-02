@@ -15,6 +15,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.config import settings
+from app.core.exceptions import ValidationError
 from app.services.audit import AuditError, audit_service
 from app.services.billing import billing_service
 from app.services.employee import EmployeeService
@@ -321,7 +322,26 @@ async def upload_and_process(
 
     Combines upload + audit + payout in a single request.
     This is the most convenient endpoint for employees submitting expenses.
+    
+    NOTE: This endpoint enforces daily receipt limits based on company policy:
+    - Autonomous Mode: AI processes receipts, hard limit enforced
+    - Human Verification Mode: All receipts go to human review, hard limit enforced
     """
+    # Step 0: Check daily receipt limit BEFORE uploading
+    policy_service = PolicyService()
+    try:
+        limit_check = await policy_service.validate_upload_allowed(
+            employee_id=employee_id,
+            company_id=company_id,
+        )
+        logger.info(
+            f"Receipt limit check passed for employee {employee_id}: "
+            f"{limit_check['current_count']}/{limit_check['daily_limit']} today, "
+            f"mode={limit_check['verification_mode']}"
+        )
+    except ValidationError as e:
+        raise HTTPException(status_code=429, detail=str(e.message))
+
     # Step 1: Upload the receipt
     storage_service = StorageService()
 
@@ -356,7 +376,30 @@ async def upload_and_process(
         category=category,
     )
 
-    # Step 2: Process the reimbursement
+    # Step 2: Process based on verification mode
+    if limit_check["requires_human_review"]:
+        # Human Verification Mode: Set status to 'flagged' for human review
+        # Don't run AI audit automatically
+        await receipt_service.update_receipt_status(
+            receipt_id=receipt["id"],
+            status="flagged",
+            audit_result={
+                "verification_mode": "human_verification",
+                "requires_human_review": True,
+                "reason": "Company policy requires human verification for all receipts",
+            },
+        )
+        return ReimbursementResponse(
+            success=True,
+            receipt_id=receipt["id"],
+            status="pending_review",
+            amount_usd=None,
+            decision_reason="Receipt submitted for human review as per company policy",
+            payout_queue_id=None,
+            ledger_entry_id=None,
+        )
+
+    # Autonomous Mode: Process the reimbursement with AI
     try:
         return await process_reimbursement(
             ReimbursementRequest(
@@ -402,4 +445,30 @@ async def get_reimbursement_status(receipt_id: str):
         "payout_status": payout_status,
         "created_at": receipt.get("created_at"),
         "updated_at": receipt.get("updated_at"),
+    }
+
+
+@router.get("/daily-limit/{company_id}/{employee_id}")
+async def get_daily_limit_status(company_id: str, employee_id: str):
+    """
+    Get the daily receipt upload limit status for an employee.
+    
+    Returns:
+        - can_upload: Whether the employee can upload more receipts today
+        - current_count: Number of receipts uploaded today
+        - daily_limit: Maximum receipts allowed per day
+        - remaining_uploads: Number of receipts still allowed today
+        - verification_mode: Company's verification mode (autonomous/human_verification)
+        - requires_human_review: Whether uploads will require human review
+    """
+    policy_service = PolicyService()
+    limit_check = await policy_service.check_daily_receipt_limit(
+        employee_id=employee_id,
+        company_id=company_id,
+    )
+    
+    return {
+        "company_id": company_id,
+        "employee_id": employee_id,
+        **limit_check,
     }

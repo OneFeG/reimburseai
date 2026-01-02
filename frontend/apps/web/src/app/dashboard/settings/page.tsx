@@ -30,6 +30,7 @@ import {
   Trash2,
   Edit3,
   Camera,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { truncateAddress } from "@/lib/utils";
@@ -318,6 +319,14 @@ function CompanySettings({ company, isDemo }: { company: any; isDemo: boolean })
   const companyEmail = isDemo ? "admin@democorp.com" : company?.email || "";
   const vaultAddress = isDemo ? "0x9D86Af1Fe77969caD642c926CA81447399c1606C" : company?.vault_address || "";
 
+  // Verification mode state
+  const [verificationMode, setVerificationMode] = useState<'autonomous' | 'human_verification'>(
+    isDemo ? 'autonomous' : company?.policy?.verification_mode || 'autonomous'
+  );
+  const [dailyLimit, setDailyLimit] = useState(
+    isDemo ? 10 : company?.policy?.daily_receipt_limit || 3
+  );
+
   return (
     <div className="space-y-6">
       {/* Company header */}
@@ -342,6 +351,140 @@ function CompanySettings({ company, isDemo }: { company: any; isDemo: boolean })
             <Edit3 className="w-4 h-4" />
             Edit Logo
           </button>
+        </div>
+      </div>
+
+      {/* Verification Mode - NEW SECTION */}
+      <div className="card border-cyan-400/20">
+        <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+          <Shield className="w-5 h-5 text-cyan-400" />
+          Receipt Verification Mode
+        </h4>
+        <p className="text-white/50 text-sm mb-6">
+          Choose how receipts are verified and processed in your organization.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Autonomous Mode */}
+          <button
+            onClick={() => setVerificationMode('autonomous')}
+            className={`p-5 rounded-xl border-2 text-left transition-all ${
+              verificationMode === 'autonomous'
+                ? 'bg-cyan-400/10 border-cyan-400/50'
+                : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                verificationMode === 'autonomous' ? 'bg-cyan-400/20 text-cyan-400' : 'bg-white/5 text-white/50'
+              }`}>
+                <Zap className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h5 className="text-white font-semibold">Autonomous Mode</h5>
+                  {verificationMode === 'autonomous' && (
+                    <CheckCircle className="w-4 h-4 text-cyan-400" />
+                  )}
+                </div>
+                <p className="text-white/50 text-sm mt-1">
+                  AI handles everything automatically. Receipts are processed instantly with no human review required.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 rounded-md bg-cyan-400/10 text-cyan-400 text-xs">
+                    Instant Processing
+                  </span>
+                  <span className="px-2 py-1 rounded-md bg-emerald-400/10 text-emerald-400 text-xs">
+                    AI-Powered
+                  </span>
+                </div>
+              </div>
+            </div>
+          </button>
+
+          {/* Human Verification Mode */}
+          <button
+            onClick={() => setVerificationMode('human_verification')}
+            className={`p-5 rounded-xl border-2 text-left transition-all ${
+              verificationMode === 'human_verification'
+                ? 'bg-purple-400/10 border-purple-400/50'
+                : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                verificationMode === 'human_verification' ? 'bg-purple-400/20 text-purple-400' : 'bg-white/5 text-white/50'
+              }`}>
+                <User className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h5 className="text-white font-semibold">Human Verification</h5>
+                  {verificationMode === 'human_verification' && (
+                    <CheckCircle className="w-4 h-4 text-purple-400" />
+                  )}
+                </div>
+                <p className="text-white/50 text-sm mt-1">
+                  All receipts require human review. Best for organizations requiring manual approval workflows.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 rounded-md bg-purple-400/10 text-purple-400 text-xs">
+                    Manual Review
+                  </span>
+                  <span className="px-2 py-1 rounded-md bg-amber-400/10 text-amber-400 text-xs">
+                    Full Control
+                  </span>
+                </div>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Daily Receipt Limit */}
+        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h5 className="text-white font-medium flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-cyan-400" />
+                Daily Receipt Limit per Employee
+              </h5>
+              <p className="text-white/50 text-sm mt-1">
+                Maximum number of receipts an employee can upload per day. 
+                {verificationMode === 'human_verification' && (
+                  <span className="text-amber-400"> Default is 3 for human verification mode.</span>
+                )}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setDailyLimit(Math.max(1, dailyLimit - 1))}
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors flex items-center justify-center"
+              >
+                -
+              </button>
+              <div className="w-20 text-center">
+                <span className="text-2xl font-bold text-white">{dailyLimit}</span>
+                <p className="text-white/30 text-xs">/day</p>
+              </div>
+              <button
+                onClick={() => setDailyLimit(Math.min(50, dailyLimit + 1))}
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors flex items-center justify-center"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Info note */}
+        <div className="mt-4 p-3 rounded-lg bg-amber-400/5 border border-amber-400/20">
+          <p className="text-amber-400/80 text-xs flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>
+              When the daily limit is reached, employees cannot upload more receipts until the next day.
+              This applies to both verification modes.
+            </span>
+          </p>
         </div>
       </div>
 
@@ -415,7 +558,7 @@ function CompanySettings({ company, isDemo }: { company: any; isDemo: boolean })
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-white/70 text-sm font-medium mb-2">
-              Daily Limit (USD)
+              Max Amount per Receipt (USD)
             </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">$</span>

@@ -6,12 +6,13 @@ Business logic for expense policy operations.
 
 from supabase import Client
 
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException, ValidationError
 from app.db.supabase import get_supabase_admin_client
 from app.schemas.policy import (
     PolicyCreate,
     PolicyResponse,
     PolicyUpdate,
+    VerificationMode,
 )
 
 
@@ -166,6 +167,95 @@ class PolicyService:
         result = self.client.table(self.table).delete().eq("id", policy_id).execute()
 
         return len(result.data) > 0
+
+    async def check_daily_receipt_limit(
+        self,
+        employee_id: str,
+        company_id: str,
+    ) -> dict:
+        """
+        Check if an employee can upload more receipts today.
+        
+        Args:
+            employee_id: Employee UUID
+            company_id: Company UUID
+            
+        Returns:
+            Dict with:
+                - can_upload: bool - Whether the employee can upload
+                - current_count: int - Number of receipts uploaded today
+                - daily_limit: int - Maximum receipts per day
+                - verification_mode: str - 'autonomous' or 'human_verification'
+                - requires_human_review: bool - Whether human review is needed
+        """
+        from datetime import datetime, UTC
+        
+        # Get active policy for the company
+        try:
+            policy = await self.get_active_for_company(company_id)
+            verification_mode = policy.verification_mode
+            daily_limit = policy.daily_receipt_limit
+        except NotFoundException:
+            # Use defaults if no policy exists
+            verification_mode = VerificationMode.AUTONOMOUS
+            daily_limit = 3
+        
+        # Count receipts uploaded today by this employee
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        result = (
+            self.client.table("receipts")
+            .select("id", count="exact")
+            .eq("employee_id", employee_id)
+            .eq("company_id", company_id)
+            .gte("created_at", today_start.isoformat())
+            .execute()
+        )
+        
+        current_count = result.count or 0
+        can_upload = current_count < daily_limit
+        
+        return {
+            "can_upload": can_upload,
+            "current_count": current_count,
+            "daily_limit": daily_limit,
+            "verification_mode": verification_mode.value if hasattr(verification_mode, 'value') else verification_mode,
+            "requires_human_review": verification_mode == VerificationMode.HUMAN_VERIFICATION,
+            "remaining_uploads": max(0, daily_limit - current_count),
+        }
+
+    async def validate_upload_allowed(
+        self,
+        employee_id: str,
+        company_id: str,
+    ) -> dict:
+        """
+        Validate if an employee can upload a receipt and raise an error if not.
+        
+        Args:
+            employee_id: Employee UUID
+            company_id: Company UUID
+            
+        Returns:
+            Limit check result if allowed
+            
+        Raises:
+            ValidationError: If daily limit has been reached
+        """
+        limit_check = await self.check_daily_receipt_limit(employee_id, company_id)
+        
+        if not limit_check["can_upload"]:
+            mode_name = "Human Verification" if limit_check["requires_human_review"] else "Autonomous"
+            raise ValidationError(
+                message=(
+                    f"Daily receipt limit reached. You have uploaded {limit_check['current_count']} "
+                    f"receipts today (limit: {limit_check['daily_limit']}). "
+                    f"Your company uses {mode_name} mode. Please try again tomorrow."
+                ),
+                error_code="DAILY_LIMIT_REACHED",
+            )
+        
+        return limit_check
 
 
 # Module-level helper function
