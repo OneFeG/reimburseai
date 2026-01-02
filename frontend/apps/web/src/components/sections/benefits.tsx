@@ -22,19 +22,19 @@ const companyBenefits = [
     description: "Eliminate manual processing costs. AI handles what used to require entire finance teams.",
   },
   {
-    icon: Clock,
-    title: "Hours to Seconds",
-    description: "Process thousands of expenses in the time it takes to review one manually.",
+    icon: ShieldCheck,
+    title: "Full Verification Control",
+    description: "Choose AI-only autonomous mode or human review. Set daily limits and approval thresholds.",
   },
   {
-    icon: ShieldCheck,
-    title: "Zero Fraud Risk",
-    description: "AI catches every duplicate, manipulation, and policy violation before payout.",
+    icon: Clock,
+    title: "Multi-Currency Ready",
+    description: "Employees submit in any currency. Auto-converted to your company's base stablecoin.",
   },
   {
     icon: BarChart3,
     title: "Complete Visibility",
-    description: "Real-time dashboards and on-chain audit trails for full compliance.",
+    description: "Real-time dashboards and blockchain audit trails for full compliance and transparency.",
   },
 ];
 
@@ -203,16 +203,16 @@ function BenefitCard({
 
   return (
     <div
-      className={`group flex gap-4 p-4 rounded-xl border h-[88px] ${colorClasses[color]} transition-all duration-300`}
+      className={`group flex gap-4 p-5 rounded-xl border min-h-[100px] ${colorClasses[color]} transition-all duration-300`}
     >
       <div
         className={`flex-shrink-0 w-10 h-10 rounded-lg ${iconClasses[color]} flex items-center justify-center`}
       >
         <benefit.icon className="w-5 h-5" />
       </div>
-      <div className="flex flex-col justify-center min-w-0">
-        <h4 className="text-white font-medium mb-0.5 truncate">{benefit.title}</h4>
-        <p className="text-white/50 text-sm leading-snug line-clamp-2">{benefit.description}</p>
+      <div className="flex flex-col justify-center min-w-0 flex-1 pr-2">
+        <h4 className="text-white font-medium mb-1">{benefit.title}</h4>
+        <p className="text-white/50 text-sm leading-relaxed">{benefit.description}</p>
       </div>
     </div>
   );

@@ -1,0 +1,31 @@
+# ============================================
+# ReimburseAI Backend - Railway Configuration
+# ============================================
+# This file configures Railway deployment settings
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+buildCommand = ""
+
+[deploy]
+# Start command (if not using Dockerfile CMD)
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 4"
+
+# Health check
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+
+# Restart policy
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Number of replicas (upgrade plan required for >1)
+numReplicas = 1
+
+# Sleep when inactive (disable for production)
+# sleepApplication = false
+
+[service]
+name = "reimburse-backend"
+internalPort = 8000

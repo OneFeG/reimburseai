@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     # x402 Protocol
     auditor_endpoint: str = Field(default="http://localhost:8001/api/auditor")
-    audit_fee_usdc: float = Field(default=0.05)
+    audit_fee_usdc: float = Field(default=0.50)  # $0.50 per audit
     x402_facilitator_url: str = Field(default="https://x402.org/facilitator")
 
     # Thirdweb

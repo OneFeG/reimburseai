@@ -14,7 +14,10 @@ export function HeroSection() {
   });
 
   const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  // Only fade the upper content, keep stats visible longer on mobile
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.5], [1, 1, 0]);
+  // Stats should remain visible longer
+  const statsOpacity = useTransform(scrollYProgress, [0, 0.6, 0.8], [1, 1, 0]);
 
   return (
     <section
@@ -125,12 +128,13 @@ export function HeroSection() {
             </Link>
           </motion.div>
 
-          {/* Stats */}
+          {/* Stats - Using separate opacity to stay visible longer on mobile */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto"
+            style={{ opacity: statsOpacity }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto relative z-20"
           >
             <Stat
               icon={<Zap className="w-5 h-5 text-cyan-400" />}
@@ -206,12 +210,12 @@ function Stat({
   label: string;
 }) {
   return (
-    <div className="text-center">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10 mb-3">
+    <div className="text-center p-4 rounded-2xl bg-navy-900/50 backdrop-blur-sm border border-white/5">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-400/10 border border-cyan-400/20 mb-3">
         {icon}
       </div>
       <div className="text-3xl font-bold text-white mb-1">{value}</div>
-      <div className="text-sm text-white/40">{label}</div>
+      <div className="text-sm text-white/60">{label}</div>
     </div>
   );
 }

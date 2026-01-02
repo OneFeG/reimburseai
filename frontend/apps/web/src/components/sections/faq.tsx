@@ -3,8 +3,14 @@
 import { useRef, useState } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { HelpCircle, Plus, Minus } from "lucide-react";
+import { FAQSchema } from "@/components/seo/structured-data";
 
 const faqs = [
+  {
+    question: "What is Reimburse AI?",
+    answer:
+      "Reimburse AI is an AI-powered expense management platform that automates receipt auditing using GPT-4o vision and enables instant USDC cryptocurrency payments on Avalanche blockchain. Submit receipts, AI verifies them, and get paid in seconds.",
+  },
   {
     question: "How does the AI receipt auditing work?",
     answer:
@@ -51,9 +57,9 @@ const faqs = [
       "Receipt images are encrypted at rest and in transit. We process images for data extraction and immediately delete them. We never train AI models on your data. All sensitive information is stored with AES-256 encryption.",
   },
   {
-    question: "How do I get started?",
+    question: "How do I get started with Reimburse AI?",
     answer:
-      "Join our waitlist to get early access. Once approved, you'll complete a simple onboarding: set up your company, invite employees, configure policies, and fund your USDC wallet. Most companies are live within an hour.",
+      "Sign up at reimburseai.app to get started. Once registered, you'll complete a simple onboarding: set up your company, invite employees, configure policies, and fund your USDC wallet. Most companies are live within an hour.",
   },
 ];
 
@@ -68,6 +74,9 @@ export function FAQSection() {
       ref={ref}
       className="section-padding relative overflow-hidden bg-navy-800/30"
     >
+      {/* FAQ Schema for SEO - Google Rich Results */}
+      <FAQSchema faqs={faqs} />
+      
       {/* Background */}
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none" />
 

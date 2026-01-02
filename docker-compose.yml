@@ -1,0 +1,99 @@
+# ============================================
+# ReimburseAI - Docker Compose (Local Development)
+# ============================================
+# Use this for local development and testing
+# Run: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Backend API (FastAPI)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reimburse-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - THIRDWEB_SECRET_KEY=${THIRDWEB_SECRET_KEY}
+      - THIRDWEB_CLIENT_ID=${THIRDWEB_CLIENT_ID}
+      - THIRDWEB_COMPANY_WALLET_ADDRESS=${THIRDWEB_COMPANY_WALLET_ADDRESS}
+      - THIRDWEB_AUDITOR_WALLET_ADDRESS=${THIRDWEB_AUDITOR_WALLET_ADDRESS}
+      - CHAIN_ID=${CHAIN_ID:-43113}
+      - USDC_CONTRACT_ADDRESS=${USDC_CONTRACT_ADDRESS:-0x5425890298aed601595a70AB815c96711a31Bc65}
+    volumes:
+      - ./backend/app:/app/app  # Hot reload for development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - reimburse-network
+    restart: unless-stopped
+
+  # ============================================
+  # Frontend (Next.js) - Optional for local dev
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend/apps/web
+      dockerfile: Dockerfile
+    container_name: reimburse-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_KEY}
+      - NEXT_PUBLIC_THIRDWEB_CLIENT_ID=${THIRDWEB_CLIENT_ID}
+      - NEXT_PUBLIC_CHAIN_ID=${CHAIN_ID:-43113}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - reimburse-network
+    restart: unless-stopped
+
+  # ============================================
+  # Redis (Optional - for caching/rate limiting)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: reimburse-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - reimburse-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  reimburse-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  redis_data:
+    driver: local

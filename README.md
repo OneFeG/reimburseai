@@ -1,119 +1,39 @@
 # ReimburseAI 🧾💰
 
-> **AI-powered expense reimbursement with instant USDC payments on Avalanche**
+> **AI-powered expense reimbursement with instant stablecoin payments**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Built with Thirdweb](https://img.shields.io/badge/Built%20with-Thirdweb-purple)](https://thirdweb.com)
-[![Powered by Avalanche](https://img.shields.io/badge/Powered%20by-Avalanche-red)](https://avax.network)
 
 ---
 
 ## 🎯 What is ReimburseAI?
 
-ReimburseAI is a complete expense reimbursement platform that uses:
+ReimburseAI is a modern expense management platform that transforms how companies handle reimbursements:
 
-- **AI Vision** to analyze receipts and verify expenses
-- **Blockchain** for instant, transparent USDC payments
-- **Smart Contracts** for secure company vaults
-- **x402 Protocol** for pay-per-audit micropayments
+- **AI-Powered Auditing** - Receipts are verified automatically in seconds
+- **Instant Payments** - Approved expenses are paid in stablecoins immediately
+- **Multi-Currency Support** - Submit receipts in any currency, auto-converted
+- **Full Company Control** - Choose AI-only or human-in-the-loop verification
+- **Blockchain Audit Trail** - Complete transparency for every transaction
 
-**Result:** Employees submit receipts → AI verifies → Get paid in USDC in seconds, not weeks.
-
----
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           REIMBURSEAI ARCHITECTURE                           │
-│                                                                              │
-│                         ┌───────────────────────┐                           │
-│                         │      FRONTEND         │                           │
-│                         │    (Next.js 16)       │                           │
-│                         │                       │                           │
-│                         │  • Landing page       │                           │
-│                         │  • Dashboard          │                           │
-│                         │  • Multi-company      │                           │
-│                         │  • Wallet connect     │                           │
-│                         └───────────┬───────────┘                           │
-│                                     │                                        │
-│                                     │ REST API                               │
-│                                     ▼                                        │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │                            BACKEND (FastAPI)                          │  │
-│  │                                                                       │  │
-│  │  ┌─────────────┐   ┌─────────────┐   ┌─────────────────────────────┐ │  │
-│  │  │  AI AUDITOR │   │  SECURITY   │   │       TREASURY              │ │  │
-│  │  │             │   │   SERVICE   │   │                             │ │  │
-│  │  │ GPT-4o      │──▶│             │──▶│ Thirdweb Server Wallet      │ │  │
-│  │  │ Vision      │   │ • Signatures│   │ USDC Payments               │ │  │
-│  │  │ Analysis    │   │ • Rate Limit│   │                             │ │  │
-│  │  │             │   │ • Anomaly   │   │ NO AI decisions             │ │  │
-│  │  │ NO money    │   │ • Verify    │   │ (needs signed audit)        │ │  │
-│  │  │ access      │   │             │   │                             │ │  │
-│  │  └─────────────┘   └─────────────┘   └─────────────────────────────┘ │  │
-│  │                                                                       │  │
-│  │  Database: Supabase (PostgreSQL + RLS)                               │  │
-│  │  Storage: Supabase Storage (encrypted receipts)                      │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                     │                                        │
-│                                     │ Web3 Operations                        │
-│                                     ▼                                        │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │                         WEB3 (Thirdweb SDK)                           │  │
-│  │                                                                       │  │
-│  │  ┌─────────────────┐   ┌─────────────────┐   ┌──────────────────┐   │  │
-│  │  │  VAULT FACTORY  │   │  USDC SERVICE   │   │  x402 PAYMENTS   │   │  │
-│  │  │                 │   │                 │   │                  │   │  │
-│  │  │  │ Deploy company  │   │ Transfer USDC   │   │ $0.50 per audit  │   │  │
-│  │  │ vaults          │   │ Check balances  │   │ micropayments    │   │  │
-│  │  └─────────────────┘   └─────────────────┘   └──────────────────┘   │  │
-│  │                                                                       │  │
-│  │  Network: Avalanche (Fuji Testnet / C-Chain Mainnet)                 │  │
-│  │  Token: USDC (Circle's native stablecoin)                            │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+**Result:** Submit receipt → AI verifies → Get paid instantly. Days become seconds.
 
 ---
 
-## 📂 Project Structure
+## ✨ Key Features
 
-```
-reimburse.ai/
-├── frontend/                   # Next.js 16 web application
-│   └── apps/web/
-│       ├── src/
-│       │   ├── app/            # Pages and routes
-│       │   ├── components/     # React components
-│       │   ├── context/        # Auth context
-│       │   └── lib/            # Utilities
-│       └── README.md           # Frontend documentation
-│
-├── backend/                    # FastAPI backend
-│   ├── app/
-│   │   ├── api/                # REST endpoints
-│   │   ├── services/           # Business logic
-│   │   ├── schemas/            # Pydantic models
-│   │   └── db/                 # Database
-│   ├── migrations/             # SQL migrations
-│   └── README.md               # Backend documentation
-│
-├── Web3/                       # Blockchain integration
-│   ├── src/
-│   │   ├── vault/              # Smart contract interactions
-│   │   ├── treasury/           # Payment service
-│   │   ├── usdc/               # USDC operations
-│   │   └── x402/               # Micropayments
-│   └── README.md               # Web3 documentation
-│
-├── docs/                       # Additional documentation
-├── demo/                       # Demo scripts
-├── scripts/                    # Utility scripts
-│
-└── README.md                   # This file
-```
+### For Employees
+- 📸 **Snap & Submit** - Take a photo, upload, done
+- 🌍 **Any Currency** - Submit receipts in USD, EUR, GBP, INR, or any currency
+- ⚡ **Instant Payments** - No more waiting weeks for reimbursement
+- 🏢 **Multi-Company** - Work with multiple organizations from one account
+
+### For Companies
+- 🤖 **AI Auditing** - Advanced fraud detection and policy compliance
+- 🎛️ **Verification Control** - Autonomous AI or human-in-the-loop modes
+- 💱 **Multi-Currency** - Set your base currency, all receipts auto-convert
+- 📊 **Complete Audit Trail** - Every transaction recorded on blockchain
+- 🔒 **Enterprise Security** - Bank-grade encryption and access controls
 
 ---
 
@@ -121,313 +41,143 @@ reimburse.ai/
 
 ### Prerequisites
 
-- **Node.js 20+** - For frontend and Web3
-- **Python 3.11+** - For backend
-- **pnpm** - Package manager (recommended)
-- **Supabase account** - Database
-- **Thirdweb account** - Web3 infrastructure
-- **OpenAI API key** - AI auditing
+- Node.js 20+
+- Python 3.11+
+- pnpm (recommended)
 
-### 1. Clone the Repository
+### Development Setup
 
 ```bash
+# Clone repository
 git clone https://github.com/your-org/reimburse-ai.git
 cd reimburse-ai
-```
 
-### 2. Start the Backend
-
-```bash
+# Backend
 cd backend
-
-# Create virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1  # Windows
-# source .venv/bin/activate   # Linux/Mac
-
-# Install dependencies
 pip install -e .
-
-# Copy environment file
 cp .env.example .env
-# Edit .env with your credentials
-
-# Run migrations (in Supabase SQL Editor)
-# migrations/001_initial_schema.sql
-# migrations/002_storage_policies.sql
-# ... (all migration files)
-
-# Start server
 python run.py
-```
 
-Backend runs at: http://localhost:8000
-
-### 3. Start the Frontend
-
-```bash
+# Frontend (new terminal)
 cd frontend/apps/web
-
-# Install dependencies
 pnpm install
-
-# Create environment file
 cp .env.example .env.local
-# Edit .env.local with your credentials
-
-# Start dev server
 pnpm dev
 ```
 
-Frontend runs at: http://localhost:3000
+- Backend: http://localhost:8000
+- Frontend: http://localhost:3000
 
-### 4. Setup Web3 (Optional for development)
+---
 
-```bash
-cd Web3
+## 📂 Project Structure
 
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-# Edit .env with Thirdweb credentials
-
-# Run setup script
-npx tsx scripts/setup-testnet.ts
+```
+reimburse.ai/
+├── frontend/          # Next.js web application
+├── backend/           # Python FastAPI backend
+├── Web3/              # Blockchain integration
+├── docs/              # Documentation
+└── scripts/           # Utility scripts
 ```
 
 ---
 
-## 🔑 Environment Variables
+## 🔐 Security
 
-### Backend (.env)
+ReimburseAI implements enterprise-grade security:
 
-```env
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Thirdweb
-THIRDWEB_SECRET_KEY=your-secret-key
-THIRDWEB_ENGINE_URL=https://engine.thirdweb.com
-THIRDWEB_COMPANY_WALLET_ADDRESS=0x...
-THIRDWEB_AUDITOR_WALLET_ADDRESS=0x...
-
-# OpenAI
-OPENAI_API_KEY=sk-...
-
-# Security
-SECRET_KEY=your-random-secret-key
-```
-
-### Frontend (.env.local)
-
-```env
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your-client-id
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_CHAIN_ID=43113
-```
+- **Separation of Duties** - AI auditor and treasury are isolated systems
+- **Cryptographic Verification** - All audit results are cryptographically signed
+- **Rate Limiting** - Protection against abuse and attacks
+- **Anomaly Detection** - Intelligent fraud detection algorithms
+- **Configurable Limits** - Set daily limits and approval thresholds
 
 ---
 
-## 🔐 Security Features
+## 💼 Multi-Company Support
 
-ReimburseAI implements multiple layers of security:
+Employees can work with multiple organizations:
 
-### 1. Separation of Duties
-- **AI Auditor** - Analyzes receipts, NO access to money
-- **Treasury** - Sends payments, CANNOT approve (needs signed audit)
-
-### 2. Cryptographic Signatures
-- All audit results are HMAC-SHA256 signed
-- Timestamps and nonces prevent replay attacks
-- Signatures expire after 5 minutes
-
-### 3. Rate Limiting
-- 10 audits per minute per company
-- 5 payouts per minute per company
-- Prevents brute force attacks
-
-### 4. Anomaly Detection
-- Velocity checks (too many receipts?)
-- Amount deviation (unusually high?)
-- Merchant patterns (new vendor?)
-- Time anomalies (3 AM submission?)
-
-### 5. Payout Verification
-- Daily limits ($10,000/company)
-- High-value approval ($500+)
-- Critical value multisig ($2,000+)
-
----
-
-## 👥 Multi-Company Support
-
-Employees can work with multiple companies:
-
-```
-┌─────────────┐
-│  EMPLOYEE   │
-│  John Doe   │
-└──────┬──────┘
-       │
-       ├─────────────────┬─────────────────┐
-       ▼                 ▼                 ▼
-┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-│  ACME Corp  │   │  Tech Inc   │   │  Startup Co │
-│  (Primary)  │   │  (Manager)  │   │  (Employee) │
-│  Admin role │   │ Manager role│   │ Regular     │
-└─────────────┘   └─────────────┘   └─────────────┘
-```
-
-Features:
 - Switch between companies with one click
-- Different roles per company
-- Separate wallet addresses (optional)
-- Independent expense tracking
+- Different roles per company (Admin, Manager, Employee)
+- Independent expense tracking per organization
+- Optional separate wallet addresses per company
 
 ---
 
-## 💰 x402 Micropayments
+## 🌍 Multi-Currency
 
-AI audits cost $0.50 USDC, paid via the x402 protocol:
+Global expense management made simple:
 
-```
-Client                Backend               Blockchain
-  │                     │                      │
-  │ POST /api/audit     │                      │
-  │────────────────────▶│                      │
-  │                     │                      │
-  │ 402 Payment Required│                      │
-  │◀────────────────────│                      │
-  │                     │                      │
-  │ Sign & pay $0.50    │                      │
-  │─────────────────────│─────────────────────▶│
-  │                     │                      │
-  │ POST + X-PAYMENT    │                      │
-  │────────────────────▶│                      │
-  │                     │                      │
-  │ Audit result        │                      │
-  │◀────────────────────│                      │
-```
+- **Submit in Any Currency** - USD, EUR, GBP, INR, JPY, and more
+- **Auto-Conversion** - Receipts automatically converted to company's base stablecoin
+- **Exchange Rate Tracking** - Full audit trail of conversion rates
+- **Multiple Stablecoins** - USDC, EURC, USDT, DAI support
 
 ---
 
-## 🌐 Networks
+## 🎛️ Verification Modes
 
-| Network | Purpose | Chain ID | USDC Address |
-|---------|---------|----------|--------------|
-| **Avalanche Fuji** | Testnet | 43113 | `0x5425890298aed601595a70AB815c96711a31Bc65` |
-| **Avalanche C-Chain** | Mainnet | 43114 | `0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E` |
+Companies control how receipts are verified:
 
----
-
-## 📡 API Reference
-
-### Key Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/health` | GET | Health check |
-| `/api/upload` | POST | Upload receipt |
-| `/api/audit` | POST | AI audit (x402 gated) |
-| `/api/treasury/payout` | POST | Process payment |
-| `/api/vaults/deploy` | POST | Deploy company vault |
-| `/api/memberships/switch` | POST | Switch company context |
-| `/api/security/audit/sign` | POST | Sign audit result |
-
-Full API documentation: http://localhost:8000/docs
-
----
-
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-pytest
-pytest --cov=app  # With coverage
-```
-
-### Frontend Tests
-
-```bash
-cd frontend/apps/web
-pnpm test
-pnpm test:e2e
-```
+| Mode | Description |
+|------|-------------|
+| **Autonomous** | AI handles everything automatically |
+| **Human Review** | All receipts require human approval |
+| **Hybrid** | AI for routine, human for flagged items |
+| **High-Value** | Human review above threshold |
 
 ---
 
 ## 🚢 Deployment
 
-### Docker Compose
+See [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) for deployment instructions.
 
 ```bash
+# Docker deployment
 docker-compose up -d
 ```
-
-### Manual Deployment
-
-1. **Backend**: Deploy to any Python host (Railway, Render, etc.)
-2. **Frontend**: Deploy to Vercel (recommended)
-3. **Database**: Supabase (managed PostgreSQL)
-4. **Web3**: Thirdweb Engine (managed infrastructure)
-
-See [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) for detailed instructions.
 
 ---
 
 ## 📚 Documentation
 
-- [Frontend README](frontend/apps/web/README.md) - Frontend setup and components
-- [Backend README](backend/README.md) - Backend API and services
-- [Web3 README](Web3/README.md) - Blockchain integration
-- [x402 Integration](docs/X402_INTEGRATION.md) - Micropayment protocol
+- [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) - Launch checklist
+- [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) - Deployment guide
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute
+- [SECURITY.md](./SECURITY.md) - Security policies
 
 ---
 
 ## 🛣️ Roadmap
 
-- [x] Core expense submission flow
-- [x] AI receipt auditing (GPT-4o Vision)
-- [x] USDC payments via Thirdweb
-- [x] x402 micropayment protocol
-- [x] Multi-company employee support
-- [x] Comprehensive security system
+- [x] AI receipt auditing
+- [x] Instant stablecoin payments
+- [x] Multi-company support
+- [x] Multi-currency support
+- [x] Flexible verification modes
 - [ ] Mobile app (React Native)
 - [ ] Invoice generation
-- [ ] Advanced analytics
-- [ ] Multi-chain support
+- [ ] Advanced analytics dashboard
+- [ ] Multi-chain expansion
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [Thirdweb](https://thirdweb.com) - Web3 infrastructure
-- [Avalanche](https://avax.network) - Blockchain network
-- [OpenAI](https://openai.com) - AI capabilities
-- [Supabase](https://supabase.com) - Database and storage
-- [Vercel](https://vercel.com) - Frontend hosting
+MIT License - see [LICENSE](./LICENSE) for details.
 
 ---
 
 **Built with ❤️ for the future of expense management**
+
+🌐 [reimburseai.app](https://www.reimburseai.app)

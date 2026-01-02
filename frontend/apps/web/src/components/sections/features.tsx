@@ -17,15 +17,15 @@ const features = [
     icon: Brain,
     title: "AI-Powered Auditing",
     description:
-      "GPT-4o Vision analyzes every receipt in seconds. Extracts vendor, amount, date, and validates against your expense policy automatically.",
+      "Advanced AI analyzes every receipt in seconds. Extracts vendor, amount, date, and validates against your expense policy automatically.",
     color: "cyan",
     stats: "99.7% accuracy",
   },
   {
     icon: Zap,
-    title: "Instant USDC Payouts",
+    title: "Instant Crypto Payouts",
     description:
-      "Approved expenses are paid out instantly in USDC on Avalanche. No more waiting for payroll cycles or bank transfers.",
+      "Approved expenses are paid out instantly in stablecoins. No more waiting for payroll cycles or bank transfers.",
     color: "purple",
     stats: "< 5 second settlement",
   },
@@ -39,25 +39,25 @@ const features = [
   },
   {
     icon: FileCheck,
-    title: "Policy Enforcement",
+    title: "Flexible Verification",
     description:
-      "Set spending limits, approved categories, and vendor restrictions. AI ensures 100% compliance automatically.",
+      "Choose autonomous AI processing or human-in-the-loop verification. Full control over how receipts are validated.",
     color: "orange",
-    stats: "Custom policies",
+    stats: "Your rules, your way",
   },
   {
     icon: Clock,
-    title: "Real-Time Processing",
+    title: "Multi-Currency Support",
     description:
-      "Upload a receipt, get audited, receive payment - all in under 10 seconds. No human bottlenecks.",
+      "Submit receipts in any currency - USD, EUR, GBP, INR. Automatic conversion to your company's base stablecoin.",
     color: "pink",
-    stats: "10x faster",
+    stats: "Global coverage",
   },
   {
     icon: Wallet,
     title: "Web3 Native",
     description:
-      "Built on blockchain for transparency. Every transaction is verifiable on-chain. Your employees get crypto-native wallets.",
+      "Built on blockchain for transparency. Every transaction is verifiable on-chain with a tamper-proof audit trail.",
     color: "blue",
     stats: "On-chain audit trail",
   },
@@ -163,12 +163,12 @@ function FeatureCard({
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative"
+      className="group relative h-full"
     >
       <div
         className={`relative h-full p-8 rounded-2xl bg-gradient-to-b ${
           colorClasses[feature.color as keyof typeof colorClasses]
-        } border backdrop-blur-sm transition-all duration-300 hover:translate-y-[-4px]`}
+        } border backdrop-blur-sm transition-all duration-300 hover:translate-y-[-4px] flex flex-col`}
       >
         {/* Icon */}
         <div
@@ -183,12 +183,12 @@ function FeatureCard({
         <h3 className="text-xl font-semibold text-white mb-3">
           {feature.title}
         </h3>
-        <p className="text-white/50 leading-relaxed mb-4">
+        <p className="text-white/50 leading-relaxed mb-4 flex-grow">
           {feature.description}
         </p>
 
-        {/* Stats badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-white/70">
+        {/* Stats badge - always at bottom */}
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-white/70 mt-auto w-fit">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
           {feature.stats}
         </div>

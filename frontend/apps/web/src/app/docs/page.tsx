@@ -44,7 +44,6 @@ const sections = [
       { id: "authentication", title: "Authentication" },
       { id: "receipts", title: "Receipts API" },
       { id: "audit", title: "Audit API" },
-      { id: "x402", title: "x402 Protocol" },
     ],
   },
   {
@@ -196,8 +195,6 @@ function renderContent(
       return <ReceiptsAPIContent copyCode={copyCode} copiedCode={copiedCode} />;
     case "audit":
       return <AuditAPIContent copyCode={copyCode} copiedCode={copiedCode} />;
-    case "x402":
-      return <X402Content copyCode={copyCode} copiedCode={copiedCode} />;
     case "company-setup":
       return <CompanySetupContent />;
     case "employee-onboarding":
@@ -230,7 +227,7 @@ function IntroductionContent({
       </h1>
       <p className="text-lg text-white/60 mb-8">
         Reimburse AI is an AI-powered expense management platform that automates
-        receipt auditing and enables instant USDC payouts on Avalanche.
+        receipt auditing and enables instant stablecoin payouts.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -257,7 +254,7 @@ function IntroductionContent({
             1
           </span>
           <span>
-            <strong className="text-white">AI Receipt Auditing:</strong> GPT-4o Vision
+            <strong className="text-white">AI Receipt Auditing:</strong> Advanced AI
             extracts vendor, amount, date, and validates against your expense policy.
           </span>
         </li>
@@ -266,8 +263,8 @@ function IntroductionContent({
             2
           </span>
           <span>
-            <strong className="text-white">Instant USDC Payouts:</strong> Approved expenses
-            are paid out in seconds on Avalanche blockchain.
+            <strong className="text-white">Instant Stablecoin Payouts:</strong> Approved expenses
+            are paid out in seconds via blockchain.
           </span>
         </li>
         <li className="flex items-start gap-3">
@@ -275,8 +272,8 @@ function IntroductionContent({
             3
           </span>
           <span>
-            <strong className="text-white">x402 Protocol:</strong> HTTP-native payment
-            protocol for pay-per-use API access.
+            <strong className="text-white">Multi-Currency Support:</strong> Submit receipts
+            in any currency - auto-converted to your company's base stablecoin.
           </span>
         </li>
         <li className="flex items-start gap-3">
@@ -338,7 +335,7 @@ function QuickStartContent({
         <div className="flex items-start gap-3">
           <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
           <p className="text-white/80 text-sm">
-            <strong className="text-cyan-400">Prerequisites:</strong> You&apos;ll need a wallet address and some test USDC on Avalanche Fuji for testing.
+            <strong className="text-cyan-400">Prerequisites:</strong> You&apos;ll need a wallet address and some test stablecoins for testing.
           </p>
         </div>
       </div>
@@ -739,74 +736,6 @@ function AuditAPIContent({
   );
 }
 
-// x402 Content
-function X402Content({
-  copyCode,
-  copiedCode,
-}: {
-  copyCode: (code: string, id: string) => void;
-  copiedCode: string | null;
-}) {
-  return (
-    <>
-      <h1 className="text-4xl font-bold text-white mb-4">x402 Protocol</h1>
-      <p className="text-lg text-white/60 mb-8">
-        HTTP-native micropayments for pay-per-use API access.
-      </p>
-
-      <h2 className="text-2xl font-bold text-white mt-8 mb-4">Overview</h2>
-      <p className="text-white/60 mb-4">
-        The x402 protocol enables HTTP-native micropayments using ERC-3009 signatures. 
-        Each API request can be paid for with USDC without requiring on-chain transactions.
-      </p>
-
-      <h2 className="text-2xl font-bold text-white mt-8 mb-4">Making a Paid Request</h2>
-      <CodeBlock
-        id="x402-1"
-        language="bash"
-        code={`# Include the X-Payment header with your payment signature
-curl -X POST https://api.reimburseai.app/audit/receipt \\
-  -H "X-Payment: eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9..." \\
-  -H "Content-Type: application/json" \\
-  -d '{"receipt_id": "rec_abc123"}'
-
-# The X-Payment header contains:
-# - ERC-3009 authorization signature
-# - Payment amount (0.50 USDC per audit)
-# - Nonce for replay protection`}
-        onCopy={copyCode}
-        isCopied={copiedCode === "x402-1"}
-      />
-
-      <h2 className="text-2xl font-bold text-white mt-8 mb-4">Pricing</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left py-3 text-white">Endpoint</th>
-              <th className="text-left py-3 text-white">Cost</th>
-            </tr>
-          </thead>
-          <tbody className="text-white/60">
-            <tr className="border-b border-white/5">
-              <td className="py-3">Receipt Audit</td>
-              <td className="py-3">0.50 USDC</td>
-            </tr>
-            <tr className="border-b border-white/5">
-              <td className="py-3">Fraud Detection</td>
-              <td className="py-3">0.25 USDC</td>
-            </tr>
-            <tr>
-              <td className="py-3">Receipt Upload</td>
-              <td className="py-3">Free</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
 // Company Setup Content
 function CompanySetupContent() {
   return (
@@ -828,10 +757,10 @@ function CompanySetupContent() {
 
       <h2 className="text-2xl font-bold text-white mt-8 mb-4">2. Deploy Treasury Vault</h2>
       <p className="text-white/60 mb-4">
-        A dedicated smart contract vault will be deployed for your company on Avalanche. This vault:
+        A dedicated smart contract vault will be deployed for your company. This vault:
       </p>
       <ul className="space-y-2 text-white/60 mb-6">
-        <li>• Holds your company&apos;s USDC funds</li>
+        <li>• Holds your company&apos;s stablecoin funds</li>
         <li>• Enables instant employee payouts</li>
         <li>• Is fully self-custodial - only you can withdraw</li>
       </ul>

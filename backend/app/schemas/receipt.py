@@ -63,7 +63,7 @@ class AuditResult(BaseModel):
     merchant_category: str | None = None
     receipt_date: date | None = None
     amount: float | None = None
-    currency: str = "USD"
+    currency: str = "USD"  # Original currency from receipt (fiat: USD, EUR, GBP, etc.)
 
     # Full extraction
     extracted_data: dict[str, Any] = Field(default_factory=dict)
@@ -85,12 +85,20 @@ class ReceiptResponse(BaseModel):
     file_size: int
     mime_type: str
 
-    # Extracted data
+    # Extracted data (original from receipt)
     merchant: str | None = None
     merchant_category: str | None = None
     receipt_date: date | None = None
+    
+    # Original amount from receipt (in fiat currency)
     amount: float | None = None
-    currency: str = "USD"
+    currency: str = "USD"  # Original fiat currency (USD, EUR, GBP, INR, etc.)
+    
+    # Converted amount for payout (in company's base stablecoin)
+    converted_amount: float | None = None  # Amount in base_currency
+    payout_currency: str = "USDC"  # Company's base stablecoin (USDC, EURC, etc.)
+    exchange_rate: float | None = None  # Rate used: original_currency -> payout_currency
+    exchange_rate_timestamp: datetime | None = None  # When rate was fetched
 
     # Status
     status: ReceiptStatus

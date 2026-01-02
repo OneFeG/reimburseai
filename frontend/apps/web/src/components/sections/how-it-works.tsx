@@ -10,32 +10,32 @@ const steps = [
     icon: Upload,
     title: "Upload Receipt",
     description:
-      "Employee snaps a photo of their receipt and uploads it through the app. Supports all major formats - images, PDFs, and more.",
-    details: ["Drag & drop or camera capture", "Auto-rotate and enhance", "Batch uploads supported"],
+      "Employee snaps a photo of their receipt in any currency and uploads it through the app. Supports all formats.",
+    details: ["Any currency supported", "Auto-rotate and enhance", "Batch uploads supported"],
   },
   {
     step: "02",
     icon: Brain,
     title: "AI Analysis",
     description:
-      "GPT-4o Vision extracts all data from the receipt and validates it against your company's expense policy in real-time.",
-    details: ["Vendor identification", "Amount verification", "Policy compliance check"],
+      "Our AI extracts all data from the receipt, converts currency, and validates against your company's policy.",
+    details: ["Vendor identification", "Auto currency conversion", "Policy compliance check"],
   },
   {
     step: "03",
     icon: CheckCircle,
-    title: "Auto Approval",
+    title: "Verification",
     description:
-      "Compliant expenses are approved instantly. Flagged items are routed for review with detailed AI explanations.",
-    details: ["Instant approval pathway", "Smart flagging system", "Audit trail generation"],
+      "Based on your settings: auto-approve compliant expenses or route for human review. Full control.",
+    details: ["Autonomous or human review", "Smart flagging system", "Audit trail generation"],
   },
   {
     step: "04",
     icon: Wallet,
-    title: "USDC Payout",
+    title: "Instant Payout",
     description:
-      "Approved amount is transferred directly to the employee's wallet in USDC on Avalanche. Settlement in seconds, not days.",
-    details: ["Instant settlement", "No gas fees for employees", "On-chain verification"],
+      "Approved amount is transferred directly to the employee's wallet in your company's base stablecoin.",
+    details: ["Instant settlement", "Multi-currency to stablecoin", "On-chain verification"],
   },
 ];
 
@@ -164,12 +164,12 @@ function StepCard({
         <h3 className="text-xl font-semibold text-white mb-3">{step.title}</h3>
 
         {/* Description */}
-        <p className="text-white/50 text-sm leading-relaxed mb-4">
+        <p className="text-white/50 text-sm leading-relaxed mb-6">
           {step.description}
         </p>
 
         {/* Details list */}
-        <ul className="space-y-2">
+        <ul className="space-y-2 pt-2">
           {step.details.map((detail) => (
             <li
               key={detail}
