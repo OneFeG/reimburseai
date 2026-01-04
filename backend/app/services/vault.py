@@ -279,6 +279,8 @@ class VaultService:
         """
         Get balance of vault (native or ERC20).
 
+        Uses direct web3 for reliability (Thirdweb Engine can be flaky).
+
         Args:
             vault_address: Vault contract address
             token_address: ERC20 token address (None for native)
@@ -286,6 +288,13 @@ class VaultService:
         Returns:
             Balance information
         """
+        # Use direct web3 for balance checks (more reliable)
+        try:
+            return await self._get_balance_direct(vault_address, token_address)
+        except Exception as e:
+            logger.warning(f"Direct balance check failed, trying Thirdweb Engine: {e}")
+
+        # Fallback to Thirdweb Engine
         try:
             async with httpx.AsyncClient() as client:
                 if token_address:
@@ -306,10 +315,12 @@ class VaultService:
                     )
 
                 if response.status_code != 200:
-                    error_data = response.json() if response.content else {}
-                    raise VaultDeploymentError(
-                        f"Balance check failed: {error_data.get('message', 'Unknown error')}"
-                    )
+                    try:
+                        error_data = response.json() if response.content else {}
+                        error_msg = error_data.get('message', 'Unknown error')
+                    except Exception:
+                        error_msg = response.text[:200] if response.text else 'Unknown error'
+                    raise VaultDeploymentError(f"Balance check failed: {error_msg}")
 
                 result = response.json()
                 return {
@@ -320,6 +331,90 @@ class VaultService:
 
         except httpx.RequestError as e:
             raise VaultDeploymentError(f"Balance check failed: {str(e)}")
+
+    async def _get_balance_direct(
+        self,
+        wallet_address: str,
+        token_address: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Get balance using direct web3.py calls.
+
+        Args:
+            wallet_address: Address to check balance for
+            token_address: ERC20 token address (None for native)
+
+        Returns:
+            Balance information
+        """
+        from web3 import Web3
+
+        # RPC URL for Avalanche Fuji
+        rpc_url = "https://api.avax-test.network/ext/bc/C/rpc"
+        w3 = Web3(Web3.HTTPProvider(rpc_url))
+
+        if not w3.is_connected():
+            raise VaultDeploymentError("Failed to connect to Avalanche Fuji RPC")
+
+        checksum_address = Web3.to_checksum_address(wallet_address)
+
+        if token_address:
+            # ERC20 balance
+            checksum_token = Web3.to_checksum_address(token_address)
+            erc20_abi = [
+                {
+                    "constant": True,
+                    "inputs": [{"name": "_owner", "type": "address"}],
+                    "name": "balanceOf",
+                    "outputs": [{"name": "balance", "type": "uint256"}],
+                    "type": "function",
+                },
+                {
+                    "constant": True,
+                    "inputs": [],
+                    "name": "decimals",
+                    "outputs": [{"name": "", "type": "uint8"}],
+                    "type": "function",
+                },
+                {
+                    "constant": True,
+                    "inputs": [],
+                    "name": "symbol",
+                    "outputs": [{"name": "", "type": "string"}],
+                    "type": "function",
+                },
+            ]
+            contract = w3.eth.contract(address=checksum_token, abi=erc20_abi)
+            balance_raw = contract.functions.balanceOf(checksum_address).call()
+            decimals = contract.functions.decimals().call()
+            symbol = contract.functions.symbol().call()
+            balance_formatted = balance_raw / (10**decimals)
+
+            return {
+                "vault_address": wallet_address,
+                "balance": {
+                    "value": str(balance_raw),
+                    "displayValue": str(balance_formatted),
+                    "decimals": decimals,
+                    "symbol": symbol,
+                },
+                "token_address": token_address,
+            }
+        else:
+            # Native AVAX balance
+            balance_wei = w3.eth.get_balance(checksum_address)
+            balance_avax = w3.from_wei(balance_wei, "ether")
+
+            return {
+                "vault_address": wallet_address,
+                "balance": {
+                    "value": str(balance_wei),
+                    "displayValue": str(balance_avax),
+                    "decimals": 18,
+                    "symbol": "AVAX",
+                },
+                "token_address": None,
+            }
 
     async def check_operator_permissions(
         self,
