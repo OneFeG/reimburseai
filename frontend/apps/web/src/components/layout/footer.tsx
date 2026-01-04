@@ -31,9 +31,9 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Twitter, href: "https://twitter.com/reimburseai", label: "Twitter" },
-  { icon: Github, href: "https://github.com/reimburseai", label: "GitHub" },
-  { icon: Linkedin, href: "https://linkedin.com/company/reimburseai", label: "LinkedIn" },
+  { icon: Twitter, href: "https://x.com/reimburseai", label: "Twitter" },
+  { icon: Github, href: "https://github.com/Reimburse-AI", label: "GitHub" },
+  { icon: Linkedin, href: "https://www.linkedin.com/company/reimburse-ai", label: "LinkedIn" },
   { icon: Mail, href: "mailto:contact@reimburseai.app", label: "Email" },
 ];
 

@@ -75,13 +75,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Admin wallet address for testing real application
-export const ADMIN_WALLET_ADDRESS = "0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f";
+// Admin wallet addresses for testing real application
+export const ADMIN_WALLET_ADDRESSES = [
+  "0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f",
+  "0x8eb3f851f597356A1BA8CB9Dbce4962f4b794940",
+];
 
-// Check if a wallet is the admin wallet
+// Check if a wallet is an admin wallet
 export const isAdminWallet = (address: string | null | undefined): boolean => {
   if (!address) return false;
-  return address.toLowerCase() === ADMIN_WALLET_ADDRESS.toLowerCase();
+  return ADMIN_WALLET_ADDRESSES.some(
+    (adminAddr) => adminAddr.toLowerCase() === address.toLowerCase()
+  );
 };
 
 // Demo user data for testing
@@ -207,12 +212,91 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           activeCompanyId,
         });
       } else {
-        // User not found - they need to register
-        setUser(null);
+        // User not found in database
+        // If admin wallet, use demo data for testing
+        if (isAdminWallet(address)) {
+          const adminDemoUser: User = {
+            employee: {
+              id: "admin-employee-001",
+              name: "Admin User",
+              email: "admin@reimburseai.app",
+              wallet_address: address,
+              role: "admin",
+              is_active: true,
+              created_at: new Date().toISOString(),
+            },
+            company: {
+              id: "admin-company-001",
+              name: "ReimburseAI Test Company",
+              slug: "reimburseai-test",
+              email: "admin@reimburseai.app",
+              vault_address: "0x9D86Af1Fe77969caD642c926CA81447399c1606C",
+              admin_address: address,
+              created_at: new Date().toISOString(),
+            },
+            memberships: [{
+              id: "admin-membership-001",
+              employee_id: "admin-employee-001",
+              company_id: "admin-company-001",
+              company_name: "ReimburseAI Test Company",
+              company_slug: "reimburseai-test",
+              vault_address: "0x9D86Af1Fe77969caD642c926CA81447399c1606C",
+              role: "admin",
+              status: "active",
+              is_primary: true,
+              department: "Engineering",
+            }],
+            activeCompanyId: "admin-company-001",
+          };
+          setUser(adminDemoUser);
+          api.setContext(adminDemoUser.company!.id, adminDemoUser.employee!.id);
+        } else {
+          // Regular user not found - they need to register
+          setUser(null);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-      setUser(null);
+      // If admin wallet and error, still use demo data
+      if (isAdminWallet(address)) {
+        const adminDemoUser: User = {
+          employee: {
+            id: "admin-employee-001",
+            name: "Admin User",
+            email: "admin@reimburseai.app",
+            wallet_address: address,
+            role: "admin",
+            is_active: true,
+            created_at: new Date().toISOString(),
+          },
+          company: {
+            id: "admin-company-001",
+            name: "ReimburseAI Test Company",
+            slug: "reimburseai-test",
+            email: "admin@reimburseai.app",
+            vault_address: "0x9D86Af1Fe77969caD642c926CA81447399c1606C",
+            admin_address: address,
+            created_at: new Date().toISOString(),
+          },
+          memberships: [{
+            id: "admin-membership-001",
+            employee_id: "admin-employee-001",
+            company_id: "admin-company-001",
+            company_name: "ReimburseAI Test Company",
+            company_slug: "reimburseai-test",
+            vault_address: "0x9D86Af1Fe77969caD642c926CA81447399c1606C",
+            role: "admin",
+            status: "active",
+            is_primary: true,
+            department: "Engineering",
+          }],
+          activeCompanyId: "admin-company-001",
+        };
+        setUser(adminDemoUser);
+        api.setContext(adminDemoUser.company!.id, adminDemoUser.employee!.id);
+      } else {
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }

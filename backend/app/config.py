@@ -63,7 +63,12 @@ class Settings(BaseSettings):
     thirdweb_company_wallet_address: str = Field(default="")
     thirdweb_agent_a_wallet_address: str = Field(default="")
 
-    # Treasury
+    # Treasury - Private key for direct web3 transactions (bypasses Thirdweb bundler)
+    # This is required because Thirdweb's EIP-7702 bundler doesn't work on Avalanche Fuji
+    treasury_private_key: str = Field(
+        default="",
+        description="Private key for treasury wallet to sign transactions directly"
+    )
     treasury_secret_key: str = Field(default="change-me-treasury-secret")
 
     # Audit Signature Verification
@@ -76,6 +81,12 @@ class Settings(BaseSettings):
     admin_wallet_address: str = Field(
         default="0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f",
         description="Admin wallet address for real application testing"
+    )
+    
+    # Additional admin wallets (comma-separated)
+    admin_wallet_addresses: str = Field(
+        default="0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f,0x8eb3f851f597356A1BA8CB9Dbce4962f4b794940",
+        description="Comma-separated list of admin wallet addresses"
     )
 
     # OpenAI
@@ -132,10 +143,11 @@ class Settings(BaseSettings):
         return self.max_file_size_mb * 1024 * 1024
 
     def is_admin_wallet(self, address: str) -> bool:
-        """Check if address is the admin wallet."""
-        if not address or not self.admin_wallet_address:
+        """Check if address is an admin wallet."""
+        if not address or not self.admin_wallet_addresses:
             return False
-        return address.lower() == self.admin_wallet_address.lower()
+        admin_list = [addr.strip().lower() for addr in self.admin_wallet_addresses.split(",")]
+        return address.lower() in admin_list
 
 
 @lru_cache

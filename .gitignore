@@ -16,6 +16,8 @@ fd-reimburse.ai
 *.private.md
 INTERNAL_*.md
 PRODUCTION_CHECKLIST.md
+about.md
+
 
 # ============================================
 # Sensitive Folders (DO NOT PUSH)
@@ -230,3 +232,11 @@ artifacts/
 cache/
 typechain/
 typechain-types/
+
+
+backend/test_direct_transfer.py
+backend/test_erc4337.py
+backend/test_receipt_small.png
+backend/test_reimbursement.py
+backend/test_receipt.png
+backend/test_transfer.py

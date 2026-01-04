@@ -12,6 +12,7 @@ const navItems = [
   { label: "How it Works", href: "#how-it-works" },
   { label: "Technology", href: "#technology" },
   { label: "Security", href: "#security" },
+  { label: "About", href: "/about" },
   { label: "FAQ", href: "#faq" },
 ];
 
