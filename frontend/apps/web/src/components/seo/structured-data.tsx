@@ -22,19 +22,30 @@ export function OrganizationSchema() {
     description:
       "Reimburse AI is an AI-powered expense management platform that automates receipt auditing with GPT-4o vision and enables instant USDC crypto payments on Avalanche blockchain.",
     foundingDate: "2024",
-    // TODO: Add founders when ready
-    // founders: [
-    //   {
-    //     "@type": "Person",
-    //     name: "Founder Name",
-    //     jobTitle: "CEO & Co-Founder",
-    //   },
-    // ],
-    // Add your actual social profiles when created
+    founders: [
+      {
+        "@type": "Person",
+        name: "Shunsuke Mark Nakatani",
+        jobTitle: "CEO & Co-Founder",
+        sameAs: [
+          "https://x.com/Mark_Nakatani",
+          "https://www.linkedin.com/in/shunsuke-nakatani-770176373/"
+        ]
+      },
+      {
+        "@type": "Person",
+        name: "Suyash Kumar Singh",
+        jobTitle: "CTO & Co-Founder",
+        sameAs: [
+          "https://x.com/blinderchief_",
+          "https://www.linkedin.com/in/suyash-kumar-singh/"
+        ]
+      },
+    ],
     sameAs: [
-      "https://twitter.com/reimburseai",
-      "https://linkedin.com/company/reimburseai",
-      "https://github.com/reimburseai",
+      "https://x.com/reimburseai",
+      "https://www.linkedin.com/company/reimburse-ai",
+      "https://github.com/Reimburse-AI",
     ],
     contactPoint: {
       "@type": "ContactPoint",

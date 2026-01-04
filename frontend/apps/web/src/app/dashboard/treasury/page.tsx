@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet,
   ArrowUpRight,
@@ -15,6 +15,10 @@ import {
   TrendingUp,
   Clock,
   Shield,
+  Download,
+  X,
+  Calendar,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { formatCurrency, truncateAddress } from "@/lib/utils";
@@ -33,16 +37,20 @@ const demoRecentTransactions = [
     type: "payout",
     amount: 450.00,
     recipient: "John Doe",
-    recipientAddress: "0x1234...5678",
+    recipientAddress: "0x1234567890abcdef1234567890abcdef12345678",
     timestamp: "2024-01-15T10:30:15Z",
+    txHash: "0xabc123def456789012345678901234567890abcdef1234567890abcdef123456",
+    receiptUrl: "https://storage.reimburseai.app/receipts/receipt-001.jpg",
   },
   {
     id: "2",
     type: "payout",
     amount: 320.00,
     recipient: "Jane Smith",
-    recipientAddress: "0x2345...6789",
+    recipientAddress: "0x2345678901bcdef12345678901bcdef123456789",
     timestamp: "2024-01-14T16:45:10Z",
+    txHash: "0xdef456789012345678901234567890abcdef1234567890abcdef123456789012",
+    receiptUrl: "https://storage.reimburseai.app/receipts/receipt-002.jpg",
   },
   {
     id: "3",
@@ -51,20 +59,87 @@ const demoRecentTransactions = [
     recipient: "Treasury",
     recipientAddress: demoTreasury.walletAddress,
     timestamp: "2024-01-14T09:00:00Z",
+    txHash: "0x789012345678901234567890abcdef1234567890abcdef1234567890abcdef12",
+    receiptUrl: null,
   },
   {
     id: "4",
     type: "payout",
     amount: 156.78,
     recipient: "Bob Johnson",
-    recipientAddress: "0x3456...7890",
+    recipientAddress: "0x3456789012cdef123456789012cdef1234567890",
     timestamp: "2024-01-13T11:30:12Z",
+    txHash: "0x012345678901234567890abcdef1234567890abcdef1234567890abcdef123456",
+    receiptUrl: "https://storage.reimburseai.app/receipts/receipt-004.jpg",
   },
 ];
+
+// Generate months for export selector
+const getAvailableMonths = () => {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+      label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    });
+  }
+  return months;
+};
+
+// Export transactions to CSV
+const exportTransactionsToCSV = (transactions: typeof demoRecentTransactions, month: string) => {
+  const [year, monthNum] = month.split('-').map(Number);
+  
+  // Filter transactions by selected month (only payouts)
+  const filteredTransactions = transactions.filter(tx => {
+    if (tx.type !== 'payout') return false;
+    const txDate = new Date(tx.timestamp);
+    return txDate.getFullYear() === year && txDate.getMonth() + 1 === monthNum;
+  });
+
+  // CSV headers
+  const headers = ['Date', 'Employee Address', 'Amount (USDC)', 'Transaction Hash', 'Receipt Image URL'];
+  
+  // CSV rows
+  const rows = filteredTransactions.map(tx => [
+    new Date(tx.timestamp).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    tx.recipientAddress,
+    tx.amount.toFixed(2),
+    tx.txHash,
+    tx.receiptUrl || 'N/A',
+  ]);
+
+  // Build CSV content
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n');
+
+  // Download file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `reimburse-ai-transactions-${month}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 export default function TreasuryPage() {
   const { user, isAdmin } = useAuth();
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(getAvailableMonths()[0].value);
 
   const copyAddress = () => {
     navigator.clipboard.writeText(demoTreasury.walletAddress);
@@ -100,6 +175,13 @@ export default function TreasuryPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="btn-secondary"
+          >
+            <Download className="w-4 h-4" />
+            Export Data
+          </button>
           <button className="btn-secondary">
             <Send className="w-4 h-4" />
             Withdraw
@@ -228,6 +310,97 @@ export default function TreasuryPage() {
           ))}
         </div>
       </div>
+
+      {/* Export Data Modal */}
+      <AnimatePresence>
+        {showExportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-navy-900 border border-white/10 rounded-2xl p-6 shadow-2xl"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-cyan-400/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Export Transactions</h3>
+                    <p className="text-white/50 text-sm">Download CSV for compliance</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Month Selector */}
+              <div className="mb-6">
+                <label className="block text-sm text-white/60 mb-2">Select Month</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white appearance-none cursor-pointer focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20"
+                  >
+                    {getAvailableMonths().map((month) => (
+                      <option key={month.value} value={month.value} className="bg-navy-900">
+                        {month.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Export Info */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/5 mb-6">
+                <h4 className="text-sm font-medium text-white mb-2">CSV will include:</h4>
+                <ul className="text-sm text-white/50 space-y-1">
+                  <li>• Date & Time</li>
+                  <li>• Employee Wallet Address</li>
+                  <li>• Amount (USDC)</li>
+                  <li>• Transaction Hash</li>
+                  <li>• Receipt Image URL</li>
+                </ul>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="flex-1 px-4 py-3 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    exportTransactionsToCSV(demoRecentTransactions, selectedMonth);
+                    setShowExportModal(false);
+                  }}
+                  className="flex-1 px-4 py-3 bg-cyan-400 hover:bg-cyan-500 text-black font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download CSV
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
