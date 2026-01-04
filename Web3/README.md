@@ -126,9 +126,9 @@
 │   AUDITOR SERVER WALLET                                      │
 │   Address: 0x2fAC7C9858e07eC8CaaAD17Ff358238BdC95dDeD       │
 │                                                              │
-│   PURPOSE: Receives the $0.05 audit fee per receipt         │
+│   PURPOSE: Receives the $0.50 audit fee per receipt         │
 │                                                              │
-│   (This is how we monetize - each AI audit costs $0.05)     │
+│   (This is how we monetize - each AI audit costs $0.50)     │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -194,8 +194,8 @@ The x402 module handles pay-per-audit micropayments using Thirdweb:
 │                    ▼                                             │
 │   2. Backend returns 402 Payment Required                        │
 │      {                                                           │
-│        "amount": "50000",  // $0.05 USDC (6 decimals)           │
-│        "recipient": "0x...",  // Auditor wallet                 │
+│        "amount": "500000",  // $0.50 USDC (6 decimals)            │
+│        "recipient": "0x...",  // Auditor wallet                  │
 │        "network": "avalanche-fuji"                               │
 │      }                                                           │
 │                    │                                             │
@@ -245,7 +245,7 @@ fetch('/api/audit', {
 
 ---
 
-## �🔐 Security Model (Why It's Safe)
+## 🔐 Security Model (Why It's Safe)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -273,6 +273,55 @@ fetch('/api/audit', {
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### 🛡️ Advanced Security Features (NEW)
+
+The backend security system includes comprehensive protection measures that integrate with the Web3 layer:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        SECURITY PROTECTION LAYERS                            │
+│                                                                              │
+│  LAYER 1: CRYPTOGRAPHIC SIGNATURES                                          │
+│  ═══════════════════════════════════                                        │
+│  • All audit results are HMAC-SHA256 signed                                 │
+│  • Signatures include timestamp + nonce (prevents replay attacks)           │
+│  • Signatures expire after 5 minutes                                        │
+│  • Treasury verifies signature before any payout                            │
+│                                                                              │
+│  LAYER 2: RATE LIMITING                                                      │
+│  ══════════════════════                                                      │
+│  • 10 audits per minute per company                                         │
+│  • 5 payouts per minute per company                                         │
+│  • Prevents brute force and abuse                                           │
+│                                                                              │
+│  LAYER 3: ANOMALY DETECTION                                                  │
+│  ══════════════════════════                                                  │
+│  • Velocity check: Too many receipts in 24 hours?                           │
+│  • Amount deviation: Is this 5x the employee's average?                     │
+│  • Merchant check: New vendor for this category?                            │
+│  • Time check: Submitted at 3 AM on a Saturday?                             │
+│                                                                              │
+│  LAYER 4: PAYOUT VERIFICATION                                                │
+│  ════════════════════════════                                                │
+│  • Verify audit signature is valid                                          │
+│  • Verify receipt exists and is approved                                    │
+│  • Check daily payout limits ($10,000/company/day)                          │
+│  • Flag high-value ($500+) for manager approval                             │
+│  • Flag critical-value ($2,000+) for multisig                               │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Security Thresholds
+
+| Threshold | Value | Action |
+|-----------|-------|--------|
+| High-value expense | $500+ | Requires manager approval |
+| Critical expense | $2,000+ | Requires multisig approval |
+| Daily payout limit | $10,000 | Per company per day |
+| Anomaly score | 0.7+ | Flagged for manual review |
+| Max daily receipts | 20 | Per employee velocity check |
 
 ---
 

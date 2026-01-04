@@ -5,8 +5,16 @@ Request/Response models for expense policy management.
 """
 
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, Field
+
+
+class VerificationMode(str, Enum):
+    """Receipt verification mode for the company."""
+    
+    AUTONOMOUS = "autonomous"  # AI handles everything, hard limit enforced, no uploads after limit
+    HUMAN_VERIFICATION = "human_verification"  # All receipts go through human review
 
 
 class PolicyBase(BaseModel):
@@ -17,6 +25,19 @@ class PolicyBase(BaseModel):
         max_length=100,
         description="Policy name",
     )
+    
+    # Verification Mode Settings
+    verification_mode: VerificationMode = Field(
+        default=VerificationMode.AUTONOMOUS,
+        description="How receipts are verified: autonomous (AI-only) or human_verification (manual review)",
+    )
+    daily_receipt_limit: int = Field(
+        default=3,
+        ge=1,
+        le=50,
+        description="Maximum receipts per employee per day. Default is 3 for human_verification mode.",
+    )
+    
     amount_cap_usd: float = Field(
         default=1000.0,
         gt=0,
@@ -75,6 +96,8 @@ class PolicyUpdate(BaseModel):
     """Schema for updating policy details."""
 
     name: str | None = Field(None, max_length=100)
+    verification_mode: VerificationMode | None = None
+    daily_receipt_limit: int | None = Field(None, ge=1, le=50)
     amount_cap_usd: float | None = Field(None, gt=0)
     monthly_cap_usd: float | None = Field(None, gt=0)
     allowed_categories: list[str] | None = None

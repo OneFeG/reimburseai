@@ -20,6 +20,24 @@ class CompanyStatus(str, Enum):
     REJECTED = "rejected"
 
 
+class SupportedCurrency(str, Enum):
+    """Supported stablecoin currencies for payouts."""
+    
+    USDC = "USDC"  # USD Coin - US Dollar
+    EURC = "EURC"  # Euro Coin - Euro
+    USDT = "USDT"  # Tether - US Dollar
+    DAI = "DAI"    # DAI - US Dollar (decentralized)
+
+
+# Currency metadata for conversion and display
+CURRENCY_INFO = {
+    "USDC": {"symbol": "$", "fiat": "USD", "decimals": 6, "name": "USD Coin"},
+    "EURC": {"symbol": "€", "fiat": "EUR", "decimals": 6, "name": "Euro Coin"},
+    "USDT": {"symbol": "$", "fiat": "USD", "decimals": 6, "name": "Tether"},
+    "DAI": {"symbol": "$", "fiat": "USD", "decimals": 18, "name": "DAI"},
+}
+
+
 class CompanyBase(BaseModel):
     """Base company fields."""
 
@@ -38,6 +56,10 @@ class CompanyCreate(CompanyBase):
         description="URL-friendly company identifier",
         examples=["acme-corp", "my-company"],
     )
+    base_currency: SupportedCurrency = Field(
+        default=SupportedCurrency.USDC,
+        description="Base currency for all payouts. All receipts will be converted to this currency.",
+    )
 
 
 class CompanyUpdate(BaseModel):
@@ -54,6 +76,7 @@ class CompanyResponse(CompanyBase):
     id: str
     slug: str
     status: CompanyStatus
+    base_currency: SupportedCurrency = SupportedCurrency.USDC
     vault_address: str | None = None
     vault_admin_address: str | None = None
     vault_deployed_at: datetime | None = None

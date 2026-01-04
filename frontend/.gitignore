@@ -56,5 +56,10 @@ next-env.d.ts
 # Cache
 .cache/
 
+# Cypress artifacts
+cypress/videos/
+cypress/screenshots/
+cypress/results/
+
 # Sentry
 .sentryclirc

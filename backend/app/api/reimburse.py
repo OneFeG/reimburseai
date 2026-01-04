@@ -15,12 +15,18 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.config import settings
+from app.core.exceptions import ValidationError
 from app.services.audit import AuditError, audit_service
 from app.services.billing import billing_service
 from app.services.employee import EmployeeService
 from app.services.ledger import ledger_service
 from app.services.policy import PolicyService
 from app.services.receipt import receipt_service
+from app.services.signature import (
+    SignatureVerificationError,
+    TamperDetectedError,
+    signature_service,
+)
 from app.services.storage import StorageService
 from app.services.thirdweb import ThirdwebError, thirdweb_service
 from app.services.whitelist import whitelist_service
@@ -164,7 +170,17 @@ async def process_reimbursement(body: ReimbursementRequest):
     amount_usd = extracted.get("amount_usd", 0)
     decision_reason = validation.get("decision_reason", "Unknown")
 
-    # Update receipt with audit result
+    # Step 4.5: Create cryptographic signature of audit result
+    # This provides tamper detection and non-repudiation
+    audit_certificate = signature_service.create_audit_certificate(
+        receipt_id=body.receipt_id,
+        audit_result=audit_result,
+        company_id=body.company_id,
+        employee_id=body.employee_id,
+    )
+    logger.info(f"Created audit certificate for receipt {body.receipt_id}")
+
+    # Update receipt with audit result and signature
     new_status = "approved" if is_approved else "rejected"
     await receipt_service.update_receipt_status(
         receipt_id=body.receipt_id,
@@ -174,6 +190,8 @@ async def process_reimbursement(body: ReimbursementRequest):
             "validation": validation,
             "confidence": audit_result.get("confidence"),
             "audited_at": audit_result.get("audited_at"),
+            "signature": audit_certificate["signature"],
+            "certificate": audit_certificate,
         },
     )
 
@@ -187,7 +205,47 @@ async def process_reimbursement(body: ReimbursementRequest):
             decision_reason=decision_reason,
         )
 
-    # Step 5: Initiate payout
+    # Step 5: Verify audit signature before payout (tamper detection)
+    try:
+        signature_service.verify_audit_signature(
+            receipt_id=body.receipt_id,
+            audit_result=audit_result,
+            signature_envelope=audit_certificate["signature"],
+        )
+        logger.info(f"Audit signature verified for receipt {body.receipt_id}")
+    except TamperDetectedError as e:
+        logger.error(f"SECURITY: Tamper detected for receipt {body.receipt_id}: {e}")
+        raise HTTPException(
+            status_code=403,
+            detail="Audit result verification failed - potential tampering detected"
+        )
+    except SignatureVerificationError as e:
+        logger.error(f"Signature verification error: {e}")
+        raise HTTPException(status_code=500, detail=f"Signature verification failed: {str(e)}")
+
+    # Step 6: CRITICAL - Re-verify whitelist immediately before transfer
+    # This prevents payouts if employee was removed from whitelist after approval
+    is_still_whitelisted = await whitelist_service.is_wallet_whitelisted(
+        wallet_address=employee_wallet,
+        company_id=body.company_id,
+    )
+    if not is_still_whitelisted:
+        logger.warning(
+            f"SECURITY: Wallet {employee_wallet} was removed from whitelist between "
+            f"approval and payout for receipt {body.receipt_id}"
+        )
+        # Update receipt status to reflect the issue
+        await receipt_service.update_receipt_status(
+            receipt_id=body.receipt_id,
+            status="approved",  # Keep approved, but payout blocked
+            payout_info={"error": "Wallet removed from whitelist before payout"},
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Employee wallet is no longer whitelisted - payout blocked"
+        )
+
+    # Step 7: Initiate payout
     payout_queue_id = None
     try:
         transfer_result = await thirdweb_service.transfer_usdc(
@@ -224,7 +282,7 @@ async def process_reimbursement(body: ReimbursementRequest):
         )
         raise HTTPException(status_code=500, detail=f"Receipt approved but payout failed: {str(e)}")
 
-    # Step 6: Create ledger entry
+    # Step 8: Create ledger entry
     ledger_entry = await ledger_service.create_entry(
         company_id=body.company_id,
         employee_id=body.employee_id,
@@ -264,7 +322,26 @@ async def upload_and_process(
 
     Combines upload + audit + payout in a single request.
     This is the most convenient endpoint for employees submitting expenses.
+    
+    NOTE: This endpoint enforces daily receipt limits based on company policy:
+    - Autonomous Mode: AI processes receipts, hard limit enforced
+    - Human Verification Mode: All receipts go to human review, hard limit enforced
     """
+    # Step 0: Check daily receipt limit BEFORE uploading
+    policy_service = PolicyService()
+    try:
+        limit_check = await policy_service.validate_upload_allowed(
+            employee_id=employee_id,
+            company_id=company_id,
+        )
+        logger.info(
+            f"Receipt limit check passed for employee {employee_id}: "
+            f"{limit_check['current_count']}/{limit_check['daily_limit']} today, "
+            f"mode={limit_check['verification_mode']}"
+        )
+    except ValidationError as e:
+        raise HTTPException(status_code=429, detail=str(e.message))
+
     # Step 1: Upload the receipt
     storage_service = StorageService()
 
@@ -299,7 +376,30 @@ async def upload_and_process(
         category=category,
     )
 
-    # Step 2: Process the reimbursement
+    # Step 2: Process based on verification mode
+    if limit_check["requires_human_review"]:
+        # Human Verification Mode: Set status to 'flagged' for human review
+        # Don't run AI audit automatically
+        await receipt_service.update_receipt_status(
+            receipt_id=receipt["id"],
+            status="flagged",
+            audit_result={
+                "verification_mode": "human_verification",
+                "requires_human_review": True,
+                "reason": "Company policy requires human verification for all receipts",
+            },
+        )
+        return ReimbursementResponse(
+            success=True,
+            receipt_id=receipt["id"],
+            status="pending_review",
+            amount_usd=None,
+            decision_reason="Receipt submitted for human review as per company policy",
+            payout_queue_id=None,
+            ledger_entry_id=None,
+        )
+
+    # Autonomous Mode: Process the reimbursement with AI
     try:
         return await process_reimbursement(
             ReimbursementRequest(
@@ -345,4 +445,30 @@ async def get_reimbursement_status(receipt_id: str):
         "payout_status": payout_status,
         "created_at": receipt.get("created_at"),
         "updated_at": receipt.get("updated_at"),
+    }
+
+
+@router.get("/daily-limit/{company_id}/{employee_id}")
+async def get_daily_limit_status(company_id: str, employee_id: str):
+    """
+    Get the daily receipt upload limit status for an employee.
+    
+    Returns:
+        - can_upload: Whether the employee can upload more receipts today
+        - current_count: Number of receipts uploaded today
+        - daily_limit: Maximum receipts allowed per day
+        - remaining_uploads: Number of receipts still allowed today
+        - verification_mode: Company's verification mode (autonomous/human_verification)
+        - requires_human_review: Whether uploads will require human review
+    """
+    policy_service = PolicyService()
+    limit_check = await policy_service.check_daily_receipt_limit(
+        employee_id=employee_id,
+        company_id=company_id,
+    )
+    
+    return {
+        "company_id": company_id,
+        "employee_id": employee_id,
+        **limit_check,
     }

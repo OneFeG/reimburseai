@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     # x402 Protocol
     auditor_endpoint: str = Field(default="http://localhost:8001/api/auditor")
-    audit_fee_usdc: float = Field(default=0.05)
+    audit_fee_usdc: float = Field(default=0.50)  # $0.50 per audit
     x402_facilitator_url: str = Field(default="https://x402.org/facilitator")
 
     # Thirdweb
@@ -63,11 +63,42 @@ class Settings(BaseSettings):
     thirdweb_company_wallet_address: str = Field(default="")
     thirdweb_agent_a_wallet_address: str = Field(default="")
 
-    # Treasury
+    # Treasury - Private key for direct web3 transactions (bypasses Thirdweb bundler)
+    # This is required because Thirdweb's EIP-7702 bundler doesn't work on Avalanche Fuji
+    treasury_private_key: str = Field(
+        default="",
+        description="Private key for treasury wallet to sign transactions directly"
+    )
     treasury_secret_key: str = Field(default="change-me-treasury-secret")
+    treasury_private_key: str = Field(
+        default="",
+        description="Private key for treasury wallet (for direct web3 transfers on non-EIP7702 chains)"
+    )
+
+    # Audit Signature Verification
+    audit_signing_key: str = Field(
+        default="",
+        description="Secret key for signing audit results. Set in production!"
+    )
+
+    # Admin wallet for testing (bypasses some checks)
+    admin_wallet_address: str = Field(
+        default="0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f",
+        description="Admin wallet address for real application testing"
+    )
+    
+    # Additional admin wallets (comma-separated)
+    admin_wallet_addresses: str = Field(
+        default="0x74efBD5F7B3cc0787B28a0814fECe6bb7Bb3928f,0x8eb3f851f597356A1BA8CB9Dbce4962f4b794940",
+        description="Comma-separated list of admin wallet addresses"
+    )
 
     # OpenAI
     openai_api_key: str = Field(default="")
+
+    # Email (Resend) - for 2FA
+    resend_api_key: str = Field(default="", description="Resend API key for sending emails")
+    from_email: str = Field(default="noreply@reimburse.ai", description="From email address")
 
     # Rate Limiting
     rate_limit_requests: int = Field(default=100)
@@ -114,6 +145,13 @@ class Settings(BaseSettings):
     def max_file_size_bytes(self) -> int:
         """Get max file size in bytes."""
         return self.max_file_size_mb * 1024 * 1024
+
+    def is_admin_wallet(self, address: str) -> bool:
+        """Check if address is an admin wallet."""
+        if not address or not self.admin_wallet_addresses:
+            return False
+        admin_list = [addr.strip().lower() for addr in self.admin_wallet_addresses.split(",")]
+        return address.lower() in admin_list
 
 
 @lru_cache

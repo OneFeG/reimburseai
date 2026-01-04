@@ -8,7 +8,7 @@
 
 ```bash
 cd frontend/apps/web
-pnpm install
+npm install
 ```
 
 ### 2. Configure Environment
@@ -21,7 +21,7 @@ The `.env.local` file is already set up with:
 ### 3. Start Development Server
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 Then open [http://localhost:3000](http://localhost:3000)
@@ -139,7 +139,7 @@ const payment = await createPayment(account, requirements);
 | **ERC-3009** (default) | Thirdweb | User signs, facilitator settles |
 | **Direct Transfer** (fallback) | User | If ERC-3009 fails |
 
-**Cost:** $0.05 USDC per audit
+**Cost:** $0.50 USDC per audit
 
 ---
 
@@ -296,7 +296,7 @@ uvicorn app.main:app --reload
 
 # Terminal 2: Frontend
 cd frontend/apps/web
-pnpm dev
+npm run dev
 ```
 
 ### Test Authentication Methods

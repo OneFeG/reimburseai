@@ -2,10 +2,9 @@
  * API Client
  * ==========
  * Central API client for communicating with the backend.
- * All API calls go through this client.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export interface ApiError {
   code: string;
@@ -28,44 +27,35 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  /**
-   * Set context for API calls (company and employee IDs)
-   */
   setContext(companyId: string, employeeId: string) {
     this.companyId = companyId;
     this.employeeId = employeeId;
   }
 
-  /**
-   * Get default headers for API requests
-   */
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (this.companyId) {
-      headers['X-Company-ID'] = this.companyId;
+      headers["X-Company-ID"] = this.companyId;
     }
     if (this.employeeId) {
-      headers['X-Employee-ID'] = this.employeeId;
+      headers["X-Employee-ID"] = this.employeeId;
     }
 
     return headers;
   }
 
-  /**
-   * Make a GET request
-   */
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'GET',
+        method: "GET",
         headers: this.getHeaders(),
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         return { success: false, error: error.detail || error };
       }
 
@@ -75,26 +65,23 @@ class ApiClient {
       return {
         success: false,
         error: {
-          code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network error',
+          code: "NETWORK_ERROR",
+          message: error instanceof Error ? error.message : "Network error",
         },
       };
     }
   }
 
-  /**
-   * Make a POST request
-   */
   async post<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeaders(),
         body: body ? JSON.stringify(body) : undefined,
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         return { success: false, error: error.detail || error };
       }
 
@@ -104,26 +91,23 @@ class ApiClient {
       return {
         success: false,
         error: {
-          code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network error',
+          code: "NETWORK_ERROR",
+          message: error instanceof Error ? error.message : "Network error",
         },
       };
     }
   }
 
-  /**
-   * Make a PATCH request
-   */
   async patch<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: this.getHeaders(),
         body: body ? JSON.stringify(body) : undefined,
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         return { success: false, error: error.detail || error };
       }
 
@@ -133,26 +117,23 @@ class ApiClient {
       return {
         success: false,
         error: {
-          code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network error',
+          code: "NETWORK_ERROR",
+          message: error instanceof Error ? error.message : "Network error",
         },
       };
     }
   }
 
-  /**
-   * Make a PUT request
-   */
   async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: this.getHeaders(),
         body: body ? JSON.stringify(body) : undefined,
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         return { success: false, error: error.detail || error };
       }
 
@@ -162,25 +143,22 @@ class ApiClient {
       return {
         success: false,
         error: {
-          code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network error',
+          code: "NETWORK_ERROR",
+          message: error instanceof Error ? error.message : "Network error",
         },
       };
     }
   }
 
-  /**
-   * Make a DELETE request
-   */
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: this.getHeaders(),
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         return { success: false, error: error.detail || error };
       }
 
@@ -190,16 +168,13 @@ class ApiClient {
       return {
         success: false,
         error: {
-          code: 'NETWORK_ERROR',
-          message: error instanceof Error ? error.message : 'Network error',
+          code: "NETWORK_ERROR",
+          message: error instanceof Error ? error.message : "Network error",
         },
       };
     }
   }
 
-  /**
-   * Upload a file (multipart/form-data)
-   */
   async uploadFile<T>(
     endpoint: string,
     file: File,
@@ -207,7 +182,7 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       if (additionalData) {
         Object.entries(additionalData).forEach(([key, value]) => {
@@ -216,17 +191,17 @@ class ApiClient {
       }
 
       const headers: HeadersInit = {};
-      if (this.companyId) headers['X-Company-ID'] = this.companyId;
-      if (this.employeeId) headers['X-Employee-ID'] = this.employeeId;
+      if (this.companyId) headers["X-Company-ID"] = this.companyId;
+      if (this.employeeId) headers["X-Employee-ID"] = this.employeeId;
 
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: formData,
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
         return { success: false, error: error.detail || error };
       }
 
@@ -236,16 +211,14 @@ class ApiClient {
       return {
         success: false,
         error: {
-          code: 'UPLOAD_ERROR',
-          message: error instanceof Error ? error.message : 'Upload failed',
+          code: "UPLOAD_ERROR",
+          message: error instanceof Error ? error.message : "Upload failed",
         },
       };
     }
   }
 }
 
-// Export singleton instance
 export const api = new ApiClient();
-
-// Export types
-export type { ApiClient };
+export const apiClient = api;
+export { ApiClient };

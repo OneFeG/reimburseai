@@ -9,10 +9,13 @@ from fastapi import APIRouter
 from app.api import (
     advance,
     audit,
+    auth,
     billing,
     kyb,
     ledger,
+    membership,
     reimburse,
+    security,
     treasury,
     whitelist,
     test_endpoints,
@@ -25,6 +28,7 @@ from app.api.endpoints import (
     receipts,
     upload,
     vaults,
+    waitlist,
 )
 
 api_router = APIRouter()
@@ -123,4 +127,28 @@ api_router.include_router(
 api_router.include_router(
     test_endpoints.router,
     tags=["Test"],
+)
+
+# Multi-company membership endpoints
+api_router.include_router(
+    membership.router,
+    tags=["Multi-Company"],
+)
+
+# Security endpoints
+api_router.include_router(
+    security.router,
+    tags=["Security"],
+)
+
+# Waitlist endpoints
+api_router.include_router(
+    waitlist.router,
+    tags=["Waitlist"],
+)
+
+# Authentication / 2FA endpoints
+api_router.include_router(
+    auth.router,
+    tags=["Authentication"],
 )

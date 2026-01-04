@@ -1,11 +1,11 @@
 [project]
 name = "reimburseai-backend"
 version = "1.0.0"
-description = "Backend API for Reimburse.ai - AI-powered expense reimbursement platform"
+description = "Backend API for Reimburse AI - AI-powered expense reimbursement platform"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "Reimburse.ai Team" }]
+authors = [{ name = "Reimburse AI Team" }]
 keywords = ["fastapi", "supabase", "expense", "reimbursement", "web3"]
 
 dependencies = [
@@ -23,6 +23,7 @@ dependencies = [
     "cryptography>=44.0.0",
     "eth-account>=0.13.0",
     "email-validator>=2.3.0",
+    "web3>=7.14.0",
 ]
 
 [project.optional-dependencies]

@@ -1,7 +1,7 @@
 /**
  * @reimburseai/web3
  * =================
- * Production-ready Web3 infrastructure for reimburse.ai
+ * Production-ready Web3 infrastructure for Reimburse AI
  * 
  * This package provides:
  * - Vault Factory: Deploy smart wallet vaults for company treasuries

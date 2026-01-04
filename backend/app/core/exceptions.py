@@ -51,6 +51,23 @@ class BadRequestException(AppException):
         )
 
 
+class ValidationError(AppException):
+    """422 Validation Error - Input validation failed."""
+
+    def __init__(
+        self,
+        message: str = "Validation error",
+        error_code: str = "VALIDATION_ERROR",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            status_code=422,
+            error_code=error_code,
+            details=details,
+        )
+
+
 class UnauthorizedException(AppException):
     """401 Unauthorized - Missing or invalid authentication."""
 
@@ -131,6 +148,23 @@ class RateLimitException(AppException):
         super().__init__(
             message=message,
             status_code=429,
+            error_code=error_code,
+            details=details,
+        )
+
+
+class SecurityException(AppException):
+    """403 Security Error - Security check failed."""
+
+    def __init__(
+        self,
+        message: str = "Security check failed",
+        error_code: str = "SECURITY_ERROR",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            status_code=403,
             error_code=error_code,
             details=details,
         )
