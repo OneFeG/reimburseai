@@ -14,6 +14,7 @@ const navItems = [
   { label: "Security", href: "#security" },
   { label: "About", href: "/about" },
   { label: "FAQ", href: "#faq" },
+  { label: "About", href: "/about" },
 ];
 
 export function Header() {
