@@ -65,6 +65,10 @@ class Settings(BaseSettings):
 
     # Treasury
     treasury_secret_key: str = Field(default="change-me-treasury-secret")
+    treasury_private_key: str = Field(
+        default="",
+        description="Private key for treasury wallet (for direct web3 transfers on non-EIP7702 chains)"
+    )
 
     # Audit Signature Verification
     audit_signing_key: str = Field(
