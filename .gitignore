@@ -1,0 +1,242 @@
+# ============================================
+# ReimburseAI - Comprehensive .gitignore
+# ============================================
+
+# ============================================
+# Project Planning & Internal Docs (SENSITIVE)
+# ============================================
+building_phase.md
+GIT_SETUP.md
+phase.md
+product.md
+PRODUCTION_DEPLOYMENT.md
+Debuging_*.md
+Debuging_1.md
+fd-reimburse.ai
+*.private.md
+INTERNAL_*.md
+PRODUCTION_CHECKLIST.md
+about.md
+
+
+# ============================================
+# Sensitive Folders (DO NOT PUSH)
+# ============================================
+docs/
+demo/
+scripts/
+
+
+# ============================================
+# Environment & Secrets
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.env
+.envrc
+
+# Secret keys
+*.pem
+*.key
+*.crt
+secrets/
+.secrets
+
+# ============================================
+# Python
+# ============================================
+.venv
+venv/
+env/
+ENV/
+.Python
+*.py[cod]
+*$py.class
+__pycache__/
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================
+# Node.js / JavaScript / TypeScript
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.turbo/
+.vercel/
+.output/
+.nuxt/
+.cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# ============================================
+# Testing
+# ============================================
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ============================================
+# IDE & Editors
+# ============================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# VS Code (allow some config)
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ============================================
+# OS Generated
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# Temporary Files
+# ============================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+
+# ============================================
+# Package Manager Locks (keep for reproducibility)
+# ============================================
+# Keep these files:
+# - package-lock.json
+# - pnpm-lock.yaml
+# - yarn.lock
+# - poetry.lock
+
+# ============================================
+# Uploads & User Content
+# ============================================
+uploads/
+media/
+user-uploads/
+
+# ============================================
+# Documentation Generation
+# ============================================
+docs/_build/
+site/
+.docusaurus/
+
+# ============================================
+# Terraform / Infrastructure
+# ============================================
+*.tfstate
+*.tfstate.*
+.terraform/
+crash.log
+
+# ============================================
+# Docker
+# ============================================
+docker-compose.override.yml
+
+# ============================================
+# Miscellaneous
+# ============================================
+*.pid
+*.seed
+*.pid.lock
+.grunt
+bower_components/
+.lock-wscript
+.yarn-integrity
+
+# Web3 specific
+artifacts/
+cache/
+typechain/
+typechain-types/
+
+
+backend/test_direct_transfer.py
+backend/test_erc4337.py
+backend/test_receipt_small.png
+backend/test_reimbursement.py
+backend/test_receipt.png
+backend/test_transfer.py

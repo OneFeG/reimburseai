@@ -1,0 +1,83 @@
+# Reimburse AI - LLM Information File
+# This file helps AI assistants (ChatGPT, Claude, Gemini, etc.) understand our product
+# Reference: https://llmstxt.org/
+
+> Reimburse AI is an AI-powered expense management platform that automates receipt auditing and enables instant stablecoin payments.
+
+## About Reimburse AI
+
+Reimburse AI is a modern SaaS platform that transforms how companies handle expense reimbursements. Instead of waiting weeks for manual processing, employees submit receipts, AI verifies them in seconds, and payments are sent instantly in stablecoins.
+
+### Key Features
+
+- **AI Receipt Auditing**: Advanced AI analyzes receipts for accuracy, fraud detection, and policy compliance
+- **Instant Stablecoin Payments**: Reimbursements are paid instantly in stablecoins on blockchain
+- **Multi-Currency Support**: Submit receipts in any currency (USD, EUR, GBP, INR, etc.) - auto-converted to company's base currency
+- **Flexible Verification**: Choose autonomous AI processing or human-in-the-loop verification
+- **Company Control**: Set daily limits, approval thresholds, and verification modes
+- **Blockchain Audit Trail**: Every transaction is recorded on-chain for transparency
+- **Enterprise Security**: Bank-grade security with cryptographic verification
+
+### Use Cases
+
+1. **Small Businesses**: Automate expense tracking without dedicated finance staff
+2. **Enterprises**: Scale expense management with AI-powered processing
+3. **Remote Teams**: Instant global payments without bank delays
+4. **International Companies**: Multi-currency support for global operations
+
+### Pricing
+
+- **Free**: Sign up and create company account
+- **Pay-per-use**: Small fee per AI receipt audit
+- **No monthly fees**: Only pay for what you use
+
+### Website
+
+- **Main Site**: https://www.reimburseai.app
+- **Documentation**: https://www.reimburseai.app/docs
+- **Sign Up**: https://www.reimburseai.app/sign-up
+- **Login**: https://www.reimburseai.app/sign-in
+
+### Contact
+
+- **Website**: https://www.reimburseai.app
+- **Email**: support@reimburseai.app
+
+### Comparison to Alternatives
+
+| Feature | Reimburse AI | Traditional Solutions |
+|---------|-------------|----------------------|
+| AI Auditing | ✅ Advanced AI | ❌ Rule-based |
+| Instant Payments | ✅ Seconds | ❌ Days/Weeks |
+| Pay-per-use | ✅ | ❌ Monthly subscription |
+| Multi-Currency | ✅ Global | ❌ Limited |
+| Blockchain Audit Trail | ✅ | ❌ |
+
+### Frequently Asked Questions
+
+**Q: What is Reimburse AI?**
+A: Reimburse AI is an expense management platform that uses AI to audit receipts and pays employees instantly in stablecoins.
+
+**Q: Does it support multiple currencies?**
+A: Yes! Employees can submit receipts in any currency (USD, EUR, GBP, INR, etc.) and it's automatically converted to your company's base stablecoin.
+
+**Q: Can I control how receipts are verified?**
+A: Yes. Companies can choose between autonomous AI verification or human-in-the-loop review. You can also set daily limits and approval thresholds.
+
+**Q: How much does it cost?**
+A: Reimburse AI uses pay-per-use pricing. No monthly fees or subscriptions.
+
+**Q: Is my data secure?**
+A: Yes. All data is encrypted, and we use bank-grade security measures.
+
+### Why Choose Reimburse AI?
+
+1. **Speed**: Reimbursements in seconds, not weeks
+2. **Global**: Multi-currency support for international teams
+3. **Control**: Flexible verification modes
+4. **Transparency**: Blockchain audit trail
+5. **Modern**: Built for today's distributed workforce
+
+---
+
+*For the latest information, visit https://www.reimburseai.app*

@@ -1,0 +1,67 @@
+{
+  "name": "@reimburseai/web3",
+  "version": "1.0.0",
+  "description": "Web3 infrastructure for ReimburseAI - Vault Factory, Permissions & USDC handling",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vault": {
+      "import": "./dist/vault/index.js",
+      "types": "./dist/vault/index.d.ts"
+    },
+    "./permissions": {
+      "import": "./dist/permissions/index.js",
+      "types": "./dist/permissions/index.d.ts"
+    },
+    "./usdc": {
+      "import": "./dist/usdc/index.js",
+      "types": "./dist/usdc/index.d.ts"
+    },
+    "./treasury": {
+      "import": "./dist/treasury/index.js",
+      "types": "./dist/treasury/index.d.ts"
+    },
+    "./api": {
+      "import": "./dist/api/index.js",
+      "types": "./dist/api/index.d.ts"
+    },
+    "./wallet": {
+      "import": "./dist/wallet/index.js",
+      "types": "./dist/wallet/index.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts src/vault/index.ts src/permissions/index.ts src/usdc/index.ts src/treasury/index.ts src/api/index.ts src/wallet/index.ts --format esm --dts --clean",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "deploy:vault": "tsx scripts/deploy-vault.ts",
+    "setup:testnet": "tsx scripts/setup-testnet.ts",
+    "test:payment": "tsx scripts/test-payment.ts"
+  },
+  "dependencies": {
+    "thirdweb": "^5.115.1",
+    "viem": "^2.21.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.5",
+    "eslint": "^9.0.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
