@@ -23,7 +23,6 @@ about.md
 # Sensitive Folders (DO NOT PUSH)
 # ============================================
 docs/
-demo/
 scripts/
 
 
@@ -38,6 +37,8 @@ scripts/
 .env*.local
 *.env
 .envrc
+yarn.lock
+credentials
 
 # Secret keys
 *.pem
@@ -77,7 +78,6 @@ var/
 sdist/
 develop-eggs/
 .installed.cfg
-lib/
 lib64/
 *.egg
 MANIFEST
