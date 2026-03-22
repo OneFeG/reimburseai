@@ -1,12 +1,14 @@
-import admin from 'firebase-admin';
+import admin from "firebase-admin";
 
-import serviceAccount from '../../credentials/reembolsoaiauth.json' with { type: "json" };
+import { FIREBASE_CONFIG } from "../../config.js";
 
-// Check if firebase is already initialized to avoid "default app already exists" error
 let firebaseApp;
 if (!admin.apps.length) {
+  if (!FIREBASE_CONFIG) {
+    throw new Error("FIREBASE_CONFIG is missing");
+  }
   firebaseApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(FIREBASE_CONFIG),
   });
 } else {
   firebaseApp = admin.app();
@@ -14,16 +16,18 @@ if (!admin.apps.length) {
 
 export const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: "No token provided or invalid format" });
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "No token provided or invalid format" });
   }
 
-  const idToken = authHeader.split('Bearer ')[1];
+  const idToken = authHeader.split("Bearer ")[1];
 
   try {
     const decodedToken = await firebaseApp.auth().verifyIdToken(idToken);
-    
+
     // Attach user info to request object
     req.user = {
       uid: decodedToken.uid,
@@ -31,7 +35,7 @@ export const verifyToken = async (req, res, next) => {
       name: decodedToken.name,
       //picture: decodedToken.picture
     };
-    
+
     next();
   } catch (error) {
     console.error("Error verifying token:", error);
