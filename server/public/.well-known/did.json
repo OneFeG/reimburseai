@@ -1,0 +1,16 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:api.reembolsoai.com",
+  "verificationMethod": [
+    {
+      "id": "did:web:api.reembolsoai.com#owner",
+      "type": "EcdsaSecp256k1RecoveryMethod2020",
+      "controller": "did:web:api.reembolsoai.com",
+      "blockchainAccountId": "eip155:42220:0x455590924aCfB744E2B2C0e3fEf1edC8D4c6B99A"
+    }
+  ],
+  "assertionMethod": ["did:web:api.reembolsoai.com#owner"]
+}

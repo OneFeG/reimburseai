@@ -4,9 +4,8 @@ import cors from "cors";
 import Routes from "./src/routes/routes.js";
 import { PORT } from "./config.js";
 
-
 var corsOptions = {
-  origin: "*",
+  origin: ["https://reembolsoai.com", "https://api.reembolsoai.com"],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
@@ -18,7 +17,6 @@ var corsOptions = {
     "Payment-Signature",
     "payment-required",
     "Payment-Required",
-    "x-secret-key",
   ],
   exposedHeaders: [
     "x-payment",

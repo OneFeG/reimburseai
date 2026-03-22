@@ -21,14 +21,7 @@ export const PlatformReimburseFlow = async (req, res) => {
         .status(400)
         .json({ ok: false, error: "Invalid or missing file" });
     }
-    // Check mime type from multer file object
-    const type = file.mimetype || "";
-    if (!type.startsWith("image/")) {
-      return res
-        .status(400)
-        .json({ ok: false, error: "File must be an image" });
-    }
-
+    
     const employee = await EmployeesService.getById(employeeUID);
     if (!employee) {
       return res.status(400).json({ ok: false, error: "Employee not found" });
@@ -80,7 +73,7 @@ export const PlatformReimburseFlow = async (req, res) => {
 
       const body = { imageData: dataUrl, policies };
 
-      const url = `${API_BASE_URL}/api/auditor`;
+      const url = `${API_BASE_URL}/auditor`;
 
       status = "processing";
       response = await fetch(

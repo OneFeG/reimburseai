@@ -1,0 +1,65 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "ReimburseAI Auditor",
+  "description": "Corporate expense audit agent. Processes invoices in real time, validates policies, and authorizes instant stablecoins payments.",
+  "image": "https://reembolsoai.com/logo-agent.png",
+  "version": "1.0",
+  "tags": [
+    "fintech",
+    "audit",
+    "compliance",
+    "stablecoins",
+    "x402"
+  ],
+  "services": [
+    {
+      "name": "web",
+      "version": "1.0.0",
+      "endpoint": "https://reembolsoai.com"
+    },
+    {
+      "name": "api",
+      "version": "1.0.0",
+      "endpoint": "https://api.reembolsoai.com",
+      "authentication":{"schemes":["Authorization"]}
+    },
+    {
+      "name": "A2A",
+      "endpoint": "https://api.reembolsoai.com/.well-known/a2a.json",
+      "version": "1.0.0"
+    },
+    {
+      "name": "OASF",
+      "version": "1.0.0",
+      "endpoint": "https://api.reembolsoai.com/.well-known/oasf.json"
+    },
+    {
+      "name": "did",
+      "version": "1.0.0",
+      "endpoint": "https://api.reembolsoai.com/.well-known/did.json"
+    }
+  ],
+  "skills": [
+    {
+      "name": "data_engineering/data_quality_management",
+      "id": 604
+    },
+    {
+      "name": "finance_and_business/business_operations",
+      "id": 1701
+    }
+  ],
+  "domains": [
+    {
+      "name": "finance_and_business/accounting",
+      "id": 1702
+    }
+  ],
+  "publisher": {
+    "organization": "ReimburseAI",
+    "website": "https://reembolsoai.com"
+  },
+  "active": true,
+  "x402Support": true,
+  "supportedTrust": ["did", "reputation", "crypto-economic", "tee-attestation"]
+}

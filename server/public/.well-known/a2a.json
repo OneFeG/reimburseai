@@ -1,0 +1,87 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ReimburseAI Auditor API",
+    "version": "1.0.0"
+  },
+  "services": [
+    {
+      "name": "InvoiceAuditor",
+      "description": "Autonomous Invoice Auditing Service Using AI.",
+      "endpoint": "https://api.reembolsoai.com/auditor",
+      "x402Support": true,
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Invoice Image - png/jpeg or ImageUrl or Base64"
+          },
+          "policies": {
+            "type": "object",
+            "properties": {
+              "currencies": { "type": "array", "items": { "type": "string" } },
+              "max_total_value": { "type": "number" },
+              "allowed_categories": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "is_active": { "type": "boolean" }
+            },
+            "description": "Corporate policies to apply to the invoice (Optionals but recommended)."
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "receipt_id": { "type": ["string", "null"] },
+          "merchant": { "type": ["string", "null"] },
+          "merchant_category": { "type": ["string", "null"] },
+          "date": { "type": ["string", "null"] },
+          "currency": { "type": ["string", "null"] },
+          "subtotal": { "type": ["number", "null"] },
+          "taxes": { "type": ["number", "null"] },
+          "fees": { "type": ["number", "null"] },
+          "tip": { "type": ["number", "null"] },
+          "total": { "type": ["number", "null"] },
+          "paymentMethod": { "type": ["string", "null"] },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "quantity": { "type": "number" },
+                "unitPrice": { "type": "number" },
+                "lineTotal": { "type": "number" }
+              }
+            }
+          },
+          "anomalies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "severity": {
+                  "type": "string",
+                  "enum": ["low", "medium", "high"]
+                },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "reimbursementValid": { "type": "boolean" },
+          "decisionReason": { "type": "string" },
+          "confidence": { "type": "number" },
+          "signature": { "type": "string" },
+          "audit_fee_paid": { "type": "string" },
+          "audit_fee_tx_hash": { "type": "string" }
+        }
+      }
+    }
+  ]
+}
