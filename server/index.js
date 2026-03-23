@@ -35,6 +35,12 @@ app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(morgan("dev"));
 app.use(Routes);
+app.use(
+  "/.well-known",
+  express.static("public/.well-known", {
+    dotfiles: "allow",
+  }),
+);
 app.use(express.static("public"));
 app.listen(PORT);
 

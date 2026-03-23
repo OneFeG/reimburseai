@@ -2,30 +2,43 @@
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+
+# Habilitamos Yarn correctamente 
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+
+# Copiamos los archivos de Yarn 
+COPY package.json yarn.lock ./
+
+# Instalación limpia usando el lockfile de Yarn 
+RUN yarn install
 
 # ETAPA 2: Construcción
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Habilitamos Yarn aquí también para el comando build
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Variables de entorno para el Build (Next.js las necesita en tiempo de compilación)
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_THIRDWEB_CLIENT_ID
-ARG NEXT_PUBLIC_NETWORK
-ARG NEXT_PUBLIC_API_FIREBASE
-ARG NEXT_PUBLIC_API_FIREBASE_APP_ID
+# Declaramos los ARG con el guion bajo inicial (estándar de Cloud Build)
+ARG _NEXT_PUBLIC_API_URL
+ARG _NEXT_PUBLIC_THIRDWEB_CLIENT_ID
+ARG _NEXT_PUBLIC_NETWORK
+ARG _NEXT_PUBLIC_API_FIREBASE
+ARG _NEXT_PUBLIC_API_FIREBASE_APP_ID
 
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_THIRDWEB_CLIENT_ID=$NEXT_PUBLIC_THIRDWEB_CLIENT_ID
-ENV NEXT_PUBLIC_NETWORK=$NEXT_PUBLIC_NETWORK
-ENV NEXT_PUBLIC_API_FIREBASE=$NEXT_PUBLIC_API_FIREBASE
-ENV NEXT_PUBLIC_API_FIREBASE_APP_ID=$NEXT_PUBLIC_API_FIREBASE_APP_ID
+# Los asignamos a las variables que Next.js leerá en el build
+ENV NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_THIRDWEB_CLIENT_ID=$_NEXT_PUBLIC_THIRDWEB_CLIENT_ID
+ENV NEXT_PUBLIC_NETWORK=$_NEXT_PUBLIC_NETWORK
+ENV NEXT_PUBLIC_API_FIREBASE=$_NEXT_PUBLIC_API_FIREBASE
+ENV NEXT_PUBLIC_API_FIREBASE_APP_ID=$_NEXT_PUBLIC_API_FIREBASE_APP_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+
+RUN yarn build
 
 # ETAPA 3: Runner (Imagen Final Ultra-ligera)
 FROM node:20-alpine AS runner

@@ -37,7 +37,6 @@ scripts/
 .env*.local
 *.env
 .envrc
-yarn.lock
 credentials
 
 # Secret keys

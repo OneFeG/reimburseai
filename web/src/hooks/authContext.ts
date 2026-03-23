@@ -1,5 +1,11 @@
 "use client";
-import { createContext, createElement, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  createElement,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   onAuthStateChanged,
   User,
@@ -18,7 +24,9 @@ import { auth, googleProvider } from "@/hooks/firebaseAuth";
 interface AuthContextType {
   user: User | null;
   newUser: boolean | null;
-  markRegistrationComplete: (accountType: "employee" | "company") => Promise<void>;
+  markRegistrationComplete: (
+    accountType: "employee" | "company",
+  ) => Promise<void>;
   loading: boolean;
   loginWithGoogle: () => Promise<boolean>;
   loginWithEmail: (email: string, pass: string) => Promise<UserCredential>;
@@ -36,6 +44,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [newUser, setNewUser] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      setUser(null);
+      setNewUser(null);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
@@ -43,10 +58,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
   const loginWithGoogle = async () => {
+    if (!auth) return false;
+
     try {
       const result = await signInWithPopup(auth, googleProvider);
 
@@ -64,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // LOGIN CLÁSICO
   const loginWithEmail = async (email: string, pass: string) => {
+    if (!auth) throw new Error("Auth not initialized");
     const credential = await signInWithEmailAndPassword(auth, email, pass);
     setNewUser(false);
     return credential;
@@ -71,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // REGISTRO CLÁSICO
   const signUpWithEmail = async (email: string, pass: string, name: string) => {
+    if (!auth) throw new Error("Auth not initialized");
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -81,7 +101,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setNewUser(true);
   };
 
-  const markRegistrationComplete = async (accountType: "employee" | "company") => {
+  const markRegistrationComplete = async (
+    accountType: "employee" | "company",
+  ) => {
+    if (!auth) throw new Error("Auth not initialized");
     setLoading(true);
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error("No user session found");
@@ -91,6 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    if (!auth) return;
     await signOut(auth);
     setNewUser(null);
   };
