@@ -45,12 +45,7 @@ const upload = multer({
 });
 
 // Auditor routes
-router.post(
-  "/api/auditup",
-  verifyToken,
-  upload.single("file"),
-  PlatformReimburseFlow,
-);
+router.post("/auditup",verifyToken,upload.single("file"),PlatformReimburseFlow,);
 router.post("/auditor", upload.single("file"), x402Getter);
 
 //Employees routes

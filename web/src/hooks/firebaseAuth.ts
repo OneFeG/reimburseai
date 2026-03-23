@@ -2,12 +2,12 @@ import { type FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
 import { type Auth, getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC3XAuLZkousjfQJ1_v11JXmpbXWxGUN1Q",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_KEY,
   authDomain: "reembolsoaiauth.firebaseapp.com",
   projectId: "reembolsoaiauth",
   storageBucket: "reembolsoaiauth.firebasestorage.app",
-  messagingSenderId: "330895162626",
-  appId: "1:330895162626:web:363f1c527950de7e65d61b",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 let app: FirebaseApp | null = null;

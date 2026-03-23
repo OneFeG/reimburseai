@@ -4,9 +4,9 @@
   "private": true,
   "description": "AI-powered expense reimbursement platform with x402 micropayments",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node ./node_modules/next/dist/bin/next dev",
+    "build": "node ./node_modules/next/dist/bin/next build",
+    "start": "node ./node_modules/next/dist/bin/next start",
     "lint": "node ./node_modules/eslint/bin/eslint.js src",
     "lint:fix": "node ./node_modules/eslint/bin/eslint.js src --fix",
     "type-check": "tsc --noEmit"

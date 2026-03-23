@@ -2,7 +2,10 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
-    '--build-arg', 'NEXT_PUBLIC_API_URL=https://server-api-330895162626.us-central1.run.app',
+    '--build-arg', 'NEXT_PUBLIC_API_URL=https://api.reembolsoai.com',
+    '--build-arg', 'NEXT_PUBLIC_FIREBASE_KEY=AIzaSyC3XAuLZkousjfQJ1_v11JXmpbXWxGUN1Q',
+    '--build-arg', 'NEXT_PUBLIC_FIREBASE_APP_ID=1:330895162626:web:363f1c527950de7e65d61b',
+    '--build-arg', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=330895162626',
     '-t', 'us-central1-docker.pkg.dev/reembolsoaiauth/reimburse-repo/web-app',
     '.'
   ]
