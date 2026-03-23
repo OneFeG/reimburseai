@@ -3,8 +3,6 @@
 import { Logo } from "@/components/brand/logo";
 import { Bell, ChevronDown, Shield, User } from "lucide-react";
 import { useProfile } from "@/hooks";
-import { thirdwebClient, chain } from "@/lib/thirdweb";
-import { ConnectButton } from "thirdweb/react";
 
 export function Navbar({ persona }: { persona: "employee" | "manager" }) {
   const { employee, company } = useProfile();
@@ -47,29 +45,19 @@ export function Navbar({ persona }: { persona: "employee" | "manager" }) {
         </button>
 
         {/* Wallet/User section */}
-        <ConnectButton
-          client={thirdwebClient}
-          chain={chain}
-          detailsButton={{
-            style: {
-              backgroundColor: "#111",
-              border: "1px solid #333",
-              borderRadius: "8px",
-              padding: "4px 12px",
-              fontSize: "12px",
-            },
+        <button
+          type="button"
+          style={{
+            backgroundColor: "#22D3EE",
+            color: "#000",
+            fontWeight: "500",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            fontSize: "12px",
           }}
-          connectButton={{
-            style: {
-              backgroundColor: "#22D3EE",
-              color: "#000",
-              fontWeight: "500",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              fontSize: "12px",
-            },
-          }}
-        />
+        >
+          Connect
+        </button>
       </div>
     </header>
   );

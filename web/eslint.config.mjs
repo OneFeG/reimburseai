@@ -8,5 +8,11 @@ const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
+  {
+    ignores: [
+      "**/.next/**",
+      "**/node_modules/**",
+    ],
+  },
   ...compat.extends("next/core-web-vitals"),
 ];

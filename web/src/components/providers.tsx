@@ -1,6 +1,5 @@
 "use client";
 
-import { ThirdwebProvider } from "thirdweb/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { SmoothScroll } from "./smooth-scroll";
@@ -22,7 +21,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThirdwebProvider>
         <FirebaseAuthProvider>
           <ProfileProvider>
             <SmoothScroll>
@@ -41,7 +39,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
             </SmoothScroll>
           </ProfileProvider>
         </FirebaseAuthProvider>
-      </ThirdwebProvider>
     </QueryClientProvider>
   );
 }

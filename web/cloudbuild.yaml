@@ -3,10 +3,6 @@ steps:
   args: [
     'build',
     '--build-arg', 'NEXT_PUBLIC_API_URL=https://server-api-330895162626.us-central1.run.app',
-    '--build-arg', 'NEXT_PUBLIC_THIRDWEB_CLIENT_ID=1a4de2159627607bbe5181084d4370c2',
-    '--build-arg', 'NEXT_PUBLIC_NETWORK=celo',
-    '--build-arg', 'NEXT_PUBLIC_API_FIREBASE=AIzaSyC3XAuLZkousjfQJ1_v11JXmpbXWxGUN1Q',
-    '--build-arg', 'NEXT_PUBLIC_API_FIREBASE_APP_ID=1:330895162626:web:363f1c527950de7e65d61b',
     '-t', 'us-central1-docker.pkg.dev/reembolsoaiauth/reimburse-repo/web-app',
     '.'
   ]
