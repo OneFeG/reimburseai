@@ -21,7 +21,7 @@ export const PlatformReimburseFlow = async (req, res) => {
         .status(400)
         .json({ ok: false, error: "Invalid or missing file" });
     }
-    
+
     const employee = await EmployeesService.getById(employeeUID);
     if (!employee) {
       return res.status(400).json({ ok: false, error: "Employee not found" });
@@ -145,7 +145,7 @@ export const PlatformReimburseFlow = async (req, res) => {
       //Rceipt Information
       merchant: data?.merchant || "",
       merchant_category: data?.merchant_category || "",
-      receipt_date: data?.date || "",
+      receipt_date: data?.date,
       amount: totalAmount,
       currency: data?.currency || "",
 
@@ -160,7 +160,7 @@ export const PlatformReimburseFlow = async (req, res) => {
       //Audit payments
       audit_fee_paid: data?.audit_fee_paid ? true : false,
       audit_fee_tx_hash: data?.audit_fee_tx_hash || "",
-      audit_fee_amount: data?.audit_fee_paid || "0",
+      audit_fee_amount: Number(data?.audit_fee_paid || 0),
 
       //Reimbursement
       payout_amount: reimburseData?.ok ? totalAmount : 0,
