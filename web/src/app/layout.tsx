@@ -7,7 +7,8 @@ import { HomepageStructuredData } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
   title: {
-    default: "Reimburse AI - AI-Powered Expense Management & Instant USDC Payments",
+    default:
+      "Reimburse AI - AI-Powered Expense Management & Instant USDC Payments",
     template: "%s | Reimburse AI",
   },
   description:
@@ -44,7 +45,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://www.reimburseai.app",
     siteName: "Reimburse AI",
-    title: "Reimburse AI - AI-Powered Expense Management & Instant USDC Payments",
+    title:
+      "Reimburse AI - AI-Powered Expense Management & Instant USDC Payments",
     description:
       "Submit receipts, AI verifies them, get paid in USDC instantly. Revolutionary expense management for modern companies. Free to start.",
     images: [
@@ -81,12 +83,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/logo.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo.png", sizes: "16x16", type: "image/png" },
+      { url: "/img/logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/img/logo.png", sizes: "16x16", type: "image/png" },
     ],
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    shortcut: "/img/logo.png",
+    apple: "/img/logo.png",
   },
   manifest: "/site.webmanifest",
   verification: {
@@ -124,14 +125,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-        <head>
+      <head>
         {/* Structured Data for Google Rich Results & LLMs */}
         <HomepageStructuredData />
-        
+
         {/* Preconnect to external services for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+
         {/* DNS Prefetch for APIs */}
         <link rel="dns-prefetch" href="https://api.reimburseai.app" />
         <link rel="dns-prefetch" href="https://api.thirdweb.com" />

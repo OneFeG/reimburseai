@@ -8,41 +8,21 @@ export function OrganizationSchema() {
   const organizationData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "@id": "https://www.reimburseai.app/#organization",
+    "@id": "https://www.reembolsoai.com/#organization",
     name: "Reimburse AI",
     alternateName: ["ReimburseAI", "Reimburse.AI"],
-    url: "https://www.reimburseai.app",
+    url: "https://www.reembolsoai.com",
     logo: {
       "@type": "ImageObject",
-      url: "https://www.reimburseai.app/logo.png",
+      url: "https://www.reembolsoai.com/img/logo.png",
       width: 512,
       height: 512,
     },
-    image: "https://www.reimburseai.app/og-image.png",
+    image: "https://www.reembolsoai.com/img/logo.png",
     description:
       "Reimburse AI is an AI-powered expense management platform that automates receipt auditing with GPT-4o vision and enables instant USDC crypto payments on Avalanche blockchain.",
     foundingDate: "2024",
     founders: [
-      {
-        "@type": "Person",
-        name: "Shunsuke Mark Nakatani",
-        jobTitle: "Co-Founder & CEO",
-        description: "Japan-born entrepreneur at the University of Washington and Vice President of the UW Blockchain Society, building innovative solutions at the intersection of Web3 and AI.",
-        sameAs: [
-          "https://x.com/Mark_Nakatani",
-          "https://www.linkedin.com/in/shunsuke-nakatani-770176373/",
-        ],
-      },
-      {
-        "@type": "Person",
-        name: "Suyash Kumar Singh",
-        jobTitle: "Co-Founder & CTO",
-        description: "IIT Guwahati student and passionate builder specializing in AI, Web3, and Blockchain solutions that solve real-world problems.",
-        sameAs: [
-          "https://x.com/blinderchief_",
-          "https://www.linkedin.com/in/suyash-kumar-singh/",
-        ],
-      },
       {
         "@type": "Person",
         name: "Juan Felipe Giraldo",
@@ -83,20 +63,20 @@ export function WebsiteSchema() {
   const websiteData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "@id": "https://www.reimburseai.app/#website",
-    url: "https://www.reimburseai.app",
+    "@id": "https://www.reembolsoai.com/#website",
+    url: "https://www.reembolsoai.com",
     name: "Reimburse AI",
     description:
       "AI-powered expense management with instant crypto settlements",
     publisher: {
-      "@id": "https://www.reimburseai.app/#organization",
+      "@id": "https://www.reembolsoai.com/#organization",
     },
     // This enables the sitelinks search box in Google
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://www.reimburseai.app/search?q={search_term_string}",
+        urlTemplate: "https://www.reembolsoai.com/search?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
@@ -115,7 +95,7 @@ export function SoftwareApplicationSchema() {
   const softwareData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "@id": "https://www.reimburseai.app/#software",
+    "@id": "https://www.reembolsoai.com/#software",
     name: "Reimburse AI",
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Expense Management Software",
@@ -142,14 +122,14 @@ export function SoftwareApplicationSchema() {
       "Real-time reimbursement tracking",
       "Avalanche blockchain integration",
     ],
-    screenshot: "https://www.reimburseai.app/og-image.png",
+    screenshot: "https://www.reembolsoai.com/img/logo.png",
     softwareVersion: "1.0",
     releaseNotes: "Initial release with AI auditing and crypto payments",
     author: {
-      "@id": "https://www.reimburseai.app/#organization",
+      "@id": "https://www.reembolsoai.com/#organization",
     },
     provider: {
-      "@id": "https://www.reimburseai.app/#organization",
+      "@id": "https://www.reembolsoai.com/#organization",
     },
   };
 
@@ -219,12 +199,12 @@ export function AboutPageStructuredData() {
   const aboutPageData = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
-    "@id": "https://www.reimburseai.app/about",
+    "@id": "https://www.reembolsoai.com/about",
     name: "About Reimburse AI",
     description: "Learn about Reimburse AI's mission to revolutionize expense management with AI and blockchain technology.",
-    url: "https://www.reimburseai.app/about",
+    url: "https://www.reembolsoai.com/about",
     mainEntity: {
-      "@id": "https://www.reimburseai.app/#organization",
+      "@id": "https://www.reembolsoai.com/#organization",
     },
     breadcrumb: {
       "@type": "BreadcrumbList",
@@ -233,13 +213,13 @@ export function AboutPageStructuredData() {
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: "https://www.reimburseai.app",
+          item: "https://www.reembolsoai.com",
         },
         {
           "@type": "ListItem",
           position: 2,
           name: "About",
-          item: "https://www.reimburseai.app/about",
+          item: "https://www.reembolsoai.com/about",
         },
       ],
     },
@@ -255,48 +235,6 @@ export function AboutPageStructuredData() {
       {
         "@type": "ListItem",
         position: 1,
-        item: {
-          "@type": "Person",
-          name: "Shunsuke Mark Nakatani",
-          jobTitle: "Co-Founder & CEO",
-          description: "Japan-born entrepreneur at the University of Washington and Vice President of the UW Blockchain Society, driving innovation at the intersection of Web3 and AI.",
-          worksFor: {
-            "@id": "https://www.reimburseai.app/#organization",
-          },
-          alumniOf: {
-            "@type": "CollegeOrUniversity",
-            name: "University of Washington",
-          },
-          sameAs: [
-            "https://x.com/Mark_Nakatani",
-            "https://www.linkedin.com/in/shunsuke-nakatani-770176373/",
-          ],
-        },
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        item: {
-          "@type": "Person",
-          name: "Suyash Kumar Singh",
-          jobTitle: "Co-Founder & CTO",
-          description: "IIT Guwahati student and passionate builder specializing in AI, Web3, and Blockchain solutions.",
-          worksFor: {
-            "@id": "https://www.reimburseai.app/#organization",
-          },
-          alumniOf: {
-            "@type": "CollegeOrUniversity",
-            name: "Indian Institute of Technology Guwahati",
-          },
-          sameAs: [
-            "https://x.com/blinderchief_",
-            "https://www.linkedin.com/in/suyash-kumar-singh/",
-          ],
-        },
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
         item: {
           "@type": "Person",
           name: "Juan Felipe Gaviria Giraldo",
