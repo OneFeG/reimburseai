@@ -57,7 +57,7 @@ export async function x402Getter(req: any, res: any, next?: any) {
     }*/
 
     const paymentArgs: PaymentArgs = {
-      resourceUrl: `${API_BASE_URL}/api/auditor`,
+      resourceUrl: `${API_BASE_URL}/auditor`,
       method: "POST",
       paymentData,
       network: paymentChain,

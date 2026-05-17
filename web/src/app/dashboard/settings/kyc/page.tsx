@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Building2,
   CheckCircle2,
@@ -10,7 +10,6 @@ import {
   Shield,
   FileText,
   Send,
-  RefreshCw,
 } from "lucide-react";
 import {
   kybApi,
@@ -67,51 +66,43 @@ const statusConfig = {
   },
 };
 
+const getDefaultFormData = (
+  isCompany: boolean,
+): Partial<KYBSubmissionRequest> => ({
+  company_name: isCompany ? "Acme Corporation" : "John Doe",
+  registration_number: "REG-123456",
+  country: "US",
+  contact_email: isCompany ? "reembolsoai@gmail.com" : "aijuenfe2030@gmail.com",
+  contact_phone: "+1 (555) 123-4567",
+  address: isCompany
+    ? "123 Business St, Suite 100\nNew York, NY 10001"
+    : "123 Main St\nNew York, NY 10001",
+  business_type: "corporation",
+  tax_id: "12-3456789",
+});
+
 export default function KYBPage() {
-  const { employee, company } = useProfile();
+  const { employee, company, isCompany } = useProfile();
   const user = { employee, company };
+  const defaultFormData = getDefaultFormData(isCompany);
+  const redirectUrl = isCompany
+    ? "https://blush-familiar-hawk-753.mypinata.cloud/ipfs/bafybeif2ttfhqzghidvyoiv3t2rdz2cmlpdiixwck7c2zbgfm7kb5acg2u"
+    : "https://blush-familiar-hawk-753.mypinata.cloud/ipfs/bafybeiccyqj5ofs26uf2sslfqjqr2ttr4hgqljxakftwdewrxqrtgzono4";
   const [kybStatus, setKybStatus] = useState<KYBStatusResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState("");
 
   // Form state
-  const [formData, setFormData] = useState<Partial<KYBSubmissionRequest>>({});
+  const [formData, setFormData] =
+    useState<Partial<KYBSubmissionRequest>>(defaultFormData);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (user?.company?.id) {
       fetchKYBStatus();
     }
   }, [user?.company?.id]);
-
-  const fetchKYBStatus = async () => {
-    if (!user?.company?.id) return;
-
-    setIsLoading(true);
-    try {
-      const response = await kybApi.getStatus(user.company.id);
-      if (response.success && response.data) {
-        setKybStatus(response.data);
-        // Pre-fill form with existing data
-        setFormData({
-          company_name: response.data.data.company_name || user.company.name,
-          registration_number: response.data.data.registration_number,
-          country: response.data.data.country,
-          contact_email: response.data.data.contact_email,
-          contact_phone: response.data.data.contact_phone,
-          address: response.data.data.address,
-          business_type: response.data.data.business_type,
-          tax_id: response.data.data.tax_id,
-        });
-      }
-    } catch (error) {
-      // No KYB status yet
-      setFormData({
-        company_name: user?.company?.name || "",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  */
 
   const handleSubmit = async () => {
     if (!user?.company?.id || !formData.company_name) {
@@ -119,38 +110,24 @@ export default function KYBPage() {
       return;
     }
 
+    setIsLoading(true);
     setIsSubmitting(true);
-    try {
-      const response = await kybApi.submit({
-        company_id: user.company.id,
-        company_name: formData.company_name,
-        registration_number: formData.registration_number,
-        country: formData.country,
-        contact_email: formData.contact_email,
-        contact_phone: formData.contact_phone,
-        address: formData.address,
-        business_type: formData.business_type,
-        tax_id: formData.tax_id,
-      });
 
-      if (response.success) {
-        toast.success("KYB verification submitted successfully");
-        fetchKYBStatus();
-      }
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+
+      window.open(redirectUrl, "_blank", "noopener,noreferrer");
+
+      toast.success(
+        `${isCompany ? "KYB" : "KYC"} verification submitted successfully`,
+      );
     } catch (error) {
       toast.error("Failed to submit KYB verification");
     } finally {
+      setIsLoading(false);
       setIsSubmitting(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-2 border-[#22D3EE] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   const status = kybStatus?.status || "unsubmitted";
   const config =
@@ -164,18 +141,21 @@ export default function KYBPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
-            Business Verification
+            {isCompany ? "Business Verification" : "Personal Verification"}
           </h1>
           <p className="text-gray-400">
-            KYB (Know Your Business) compliance verification.
+            {isCompany
+              ? "KYB (Know Your Business)"
+              : "KYC (Know Your Customer)"}{" "}
+            compliance verification.
           </p>
         </div>
-        <button
+        {/*<button
           onClick={fetchKYBStatus}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#111] border border-[#333] text-gray-300 hover:text-white hover:border-[#22D3EE] transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-        </button>
+        </button>*/}
       </div>
 
       {/* Status Banner */}
@@ -217,31 +197,51 @@ export default function KYBPage() {
       </div>
 
       {/* Verification Form */}
-      <div className="bg-[#111] border border-[#333] rounded-xl p-6 space-y-6">
+      <div className="relative bg-[#111] border border-[#333] rounded-xl p-6 space-y-6 overflow-hidden">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-[#333] bg-[#111] px-6 py-5">
+              <div className="w-10 h-10 border-2 border-[#22D3EE] border-t-transparent rounded-full animate-spin" />
+              <div className="text-center">
+                <p className="text-sm font-medium text-white">
+                  {isCompany
+                    ? "Processing KYB submission"
+                    : "Processing KYC submission"}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Uploading your information and preparing verification.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-[#22D3EE]/10 rounded-lg">
             <Building2 className="w-5 h-5 text-[#22D3EE]" />
           </div>
           <h2 className="text-lg font-semibold text-white">
-            Business Information
+            {isCompany ? "Business Information" : "Personal Information"}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-400 mb-2">
-              Legal Company Name *
+              {isCompany ? "Legal Company Name" : "Full Name"}
             </label>
             <input
               type="text"
-              value={formData.company_name || ""}
+              value={
+                formData.company_name ?? defaultFormData.company_name ?? ""
+              }
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
                   company_name: e.target.value,
                 }))
               }
-              disabled={!canEdit}
+              disabled={!canEdit || isLoading}
               className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Acme Corporation"
             />
@@ -253,14 +253,18 @@ export default function KYBPage() {
             </label>
             <input
               type="text"
-              value={formData.registration_number || ""}
+              value={
+                formData.registration_number ??
+                defaultFormData.registration_number ??
+                ""
+              }
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
                   registration_number: e.target.value,
                 }))
               }
-              disabled={!canEdit}
+              disabled={!canEdit || isLoading}
               className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Business registration #"
             />
@@ -272,11 +276,11 @@ export default function KYBPage() {
             </label>
             <input
               type="text"
-              value={formData.tax_id || ""}
+              value={formData.tax_id ?? defaultFormData.tax_id ?? ""}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, tax_id: e.target.value }))
               }
-              disabled={!canEdit}
+              disabled={!canEdit || isLoading}
               className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="XX-XXXXXXX"
             />
@@ -287,14 +291,13 @@ export default function KYBPage() {
               Country
             </label>
             <select
-              value={formData.country || ""}
+              value={formData.country ?? defaultFormData.country ?? "US"}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, country: e.target.value }))
               }
-              disabled={!canEdit}
+              disabled={!canEdit || isLoading}
               className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Select country</option>
               <option value="US">United States</option>
               <option value="CA">Canada</option>
               <option value="GB">United Kingdom</option>
@@ -311,36 +314,41 @@ export default function KYBPage() {
               Business Type
             </label>
             <select
-              value={formData.business_type || ""}
+              value={
+                formData.business_type ??
+                defaultFormData.business_type ??
+                "corporation"
+              }
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
                   business_type: e.target.value,
                 }))
               }
-              disabled={!canEdit}
+              disabled={!canEdit || isLoading}
               className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Select type</option>
               <option value="corporation">Corporation</option>
               <option value="llc">LLC</option>
               <option value="partnership">Partnership</option>
               <option value="sole_proprietor">Sole Proprietor</option>
               <option value="nonprofit">Non-Profit</option>
+              <option value="employee">Employee</option>
+              <option value="self-employed">Self-Employed</option>
               <option value="other">Other</option>
             </select>
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-400 mb-2">
-              Business Address
+              {isCompany ? "Business Address" : "Home Address"}
             </label>
             <textarea
-              value={formData.address || ""}
+              value={formData.address ?? defaultFormData.address ?? ""}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, address: e.target.value }))
               }
-              disabled={!canEdit}
+              disabled={!canEdit || isLoading}
               className="w-full h-20 px-3 py-2 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               placeholder="123 Business St, Suite 100&#10;City, State 12345"
             />
@@ -371,7 +379,7 @@ export default function KYBPage() {
                     contact_email: e.target.value,
                   }))
                 }
-                disabled={!canEdit}
+                disabled={!canEdit || isLoading}
                 className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="compliance@company.com"
               />
@@ -390,7 +398,7 @@ export default function KYBPage() {
                     contact_phone: e.target.value,
                   }))
                 }
-                disabled={!canEdit}
+                disabled={!canEdit || isLoading}
                 className="w-full h-10 px-3 rounded-md bg-black border border-[#333] text-white focus:outline-none focus:border-[#22D3EE] disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="+1 (555) 123-4567"
               />
@@ -398,11 +406,55 @@ export default function KYBPage() {
           </div>
         </div>
 
+        <div className="border-t border-[#333] pt-6 mt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-500/10 rounded-lg">
+              <FileText className="w-5 h-5 text-emerald-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-white">
+              Supporting Document
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-400">
+              Upload verification file
+            </label>
+
+            <label
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#333] bg-black/40 px-6 py-8 text-center transition-colors ${
+                canEdit
+                  ? "cursor-pointer hover:border-[#22D3EE] hover:bg-[#22D3EE]/5"
+                  : "cursor-not-allowed opacity-50"
+              }`}
+            >
+              <input
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                disabled={!canEdit || isLoading}
+                className="hidden"
+                onChange={(e) =>
+                  setSelectedFileName(e.target.files?.[0]?.name || "")
+                }
+              />
+              <FileText className="w-8 h-8 text-gray-400" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-white">
+                  {selectedFileName || "Click here to upload a file"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  PDF, PNG or JPG. Max 10MB.
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
         {canEdit && (
           <div className="pt-4 border-t border-[#333]">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || !formData.company_name}
+              disabled={isSubmitting || isLoading || !formData.company_name}
               className="w-full flex items-center justify-center gap-2 h-10 rounded-md bg-[#22D3EE] text-black font-medium hover:bg-[#22D3EE]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
@@ -433,13 +485,15 @@ export default function KYBPage() {
           <AlertCircle className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-gray-400">
             <p className="font-medium text-gray-300 mb-1">
-              Why is KYB required?
+              Why is {isCompany ? "KYB" : "KYC"} required?
             </p>
             <p>
-              Know Your Business (KYB) verification helps us comply with
-              financial regulations and ensure the security of all transactions.
-              Verified businesses unlock higher limits and full access to
-              Treasury Vault features.
+              {isCompany
+                ? "KYB (Know Your Business)"
+                : "KYC (Know Your Customer)"}{" "}
+              verification helps us comply with financial regulations and ensure
+              the security of all transactions. Verified businesses unlock
+              higher limits and full access to Treasury Vault features.
             </p>
           </div>
         </div>

@@ -33,10 +33,11 @@ import {
 import { useAuth, useProfile } from "@/hooks";
 import { policyApi, type Policy, type PolicyRequest } from "@/lib/api";
 import { truncateAddress } from "@/lib/utils";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SettingsPage() {
   const { employee, company, isCompany, policy } = useProfile();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const user = {
     employee: employee
@@ -75,11 +76,24 @@ export default function SettingsPage() {
   };
 
   const tabs = useMemo(() => {
-    const baseTabs = [
+    type SettingsTab = {
+      id: string;
+      label: string;
+      icon: typeof User;
+      href?: string;
+    };
+
+    const baseTabs: SettingsTab[] = [
       ...(!isCompany ? [{ id: "profile", label: "Profile", icon: User }] : []),
       ...(activeCompany
         ? [{ id: "company", label: "Company", icon: Building2 }]
         : []),
+      {
+        id: "kyc",
+        label: isCompany ? "KYB" : "KYC",
+        icon: CheckCircle,
+        href: "/dashboard/settings/kyc",
+      },
       ...(activeCompany && canManagePolicies
         ? [{ id: "policies", label: "Policies", icon: Zap }]
         : []),
@@ -167,7 +181,9 @@ export default function SettingsPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() =>
+                  tab.href ? router.push(tab.href) : setActiveTab(tab.id)
+                }
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   activeTab === tab.id
                     ? "bg-cyan-400/10 text-cyan-400"

@@ -2,7 +2,7 @@
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "name": "ReimburseAI Auditor",
   "description": "Corporate expense audit agent. Processes invoices in real time, validates policies, and authorizes instant stablecoins payments.",
-  "image": "https://reembolsoai.com/logo-agent.png",
+  "image": "https://reembolsoai.com/img/logo-agent.png",
   "version": "1.0",
   "tags": [
     "fintech",

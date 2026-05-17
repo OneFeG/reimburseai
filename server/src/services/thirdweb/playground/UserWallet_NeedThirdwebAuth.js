@@ -1,4 +1,4 @@
-import { getUser } from "thirdweb/wallets";
+/*import { getUser } from "thirdweb/wallets";
 import { predictSmartAccountAddress } from "thirdweb/wallets/smart";
 import { client, serverClient } from "../thirdweb.server.js";
 import { THIRDWEB_SECRET_KEY } from "../../../../config.js";
@@ -98,5 +98,5 @@ export async function makeTransfer(to, amount, from) {
   console.log("Transfer Data:", data?.error?.issues);
   console.log("Transfer Data ** :", data);
 
-  */
-}
+  
+}*/

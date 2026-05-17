@@ -11,9 +11,8 @@ if (process.env.FIREBASE_CONFIG) {
 }
 
 // Server Config
-const portFromEnv = Number(process.env.PORT);
-export const PORT = Number.isFinite(portFromEnv) && portFromEnv > 0 ? portFromEnv : 8080;
-export const HOST = process.env.API_BASE_URL;
+export const PORT = 8080;
+export const HOST = process.env.HOST;
 
 export const FIREBASE_CONFIG = firebaseConfig;
 // Supabase Config

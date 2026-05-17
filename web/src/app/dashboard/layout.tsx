@@ -9,6 +9,7 @@ import {
   Receipt,
   Upload,
   History,
+  HandCoins,
   Settings,
   Building2,
   Users,
@@ -28,6 +29,10 @@ import { useAuth, useProfile } from "@/hooks";
 import { CompanySwitcher } from "@/components/dashboard/company-switcher";
 import { truncateAddress } from "@/lib/utils";
 import { ProtectedRoute } from "@/components/protectedRoute";
+import {
+  DashboardBalanceProvider,
+  useDashboardBalance,
+} from "@/app/dashboard/dashboard-balance-context";
 
 const navigation = [
   {
@@ -49,6 +54,11 @@ const navigation = [
     name: "Transaction History",
     href: "/dashboard/history",
     icon: History,
+  },
+  {
+    name: "Settle",
+    href: "/dashboard/settle",
+    icon: HandCoins,
   },
   {
     name: "Settings",
@@ -85,33 +95,66 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <DashboardBalanceProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </DashboardBalanceProvider>
+  );
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { loading: authLoading, logout } = useAuth();
-  const { employee, company, isCompany, policy, loading: profileLoading } = useProfile();
+  const { balance } = useDashboardBalance();
+  const {
+    employee,
+    company,
+    isCompany,
+    policy,
+    loading: profileLoading,
+  } = useProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const loading = authLoading || profileLoading;
+  const displayName = isCompany
+    ? company?.name || "Company"
+    : employee?.name || "User";
+  const displayEmail = isCompany
+    ? company?.email || "company@example.com"
+    : employee?.email || "user@example.com";
+  const avatarLabel = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
 
   const role = employee?.employee_role || "employee";
   const hasCompanyId = isCompany || !!employee?.company_id;
-  const canInviteEmployees = isCompany || role === "manager" || role === "admin";
-  const canManageEmployees = isCompany || role === "manager" || role === "admin";
+  const canInviteEmployees =
+    isCompany || role === "manager" || role === "admin";
+  const canManageEmployees =
+    isCompany || role === "manager" || role === "admin";
   const hasPolicyId = Boolean(policy?.id);
 
   const mainNavigation = useMemo(() => {
     if (isCompany) {
       return navigation.filter(
         (item) =>
-          item.href === "/dashboard" || item.href === "/dashboard/settings",
+          item.href === "/dashboard" ||
+          item.href === "/dashboard/settle" ||
+          item.href === "/dashboard/settings",
       );
     }
 
     if (!hasCompanyId) {
       return navigation.filter(
         (item) =>
-          item.href === "/dashboard" || item.href === "/dashboard/settings",
+          item.href === "/dashboard" ||
+          item.href === "/dashboard/settle" ||
+          item.href === "/dashboard/settings",
       );
     }
 
@@ -137,9 +180,13 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (loading) return;
-    if (pathname.startsWith("/dashboard/settings")) return;
+    const isAllowedMainRoute = mainNavigation.some((item) =>
+      item.href === "/dashboard"
+        ? pathname === item.href
+        : pathname === item.href || pathname.startsWith(`${item.href}/`),
+    );
 
-    if (pathname === "/dashboard") return;
+    if (isAllowedMainRoute) return;
 
     if (isCompany) {
       const allowedCompanyRoute = adminNavigation.some(
@@ -161,7 +208,15 @@ export default function DashboardLayout({
       router.replace("/dashboard");
       return;
     }
-  }, [employee, hasPolicyId, isCompany, loading, pathname, router]);
+  }, [
+    employee,
+    hasPolicyId,
+    isCompany,
+    loading,
+    mainNavigation,
+    pathname,
+    router,
+  ]);
 
   // Show loading state while checking authorization
   if (loading) {
@@ -236,7 +291,6 @@ export default function DashboardLayout({
               </button>
             </div>
 
-
             {/* Company Switcher */}
             {!isCompany && (
               <div className="px-4 mt-4">
@@ -308,6 +362,20 @@ export default function DashboardLayout({
 
             {/* Right side */}
             <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10">
+                <div className="w-9 h-9 rounded-xl bg-emerald-400/15 flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[11px] uppercase tracking-wide text-white/40">
+                    USDC Balance
+                  </p>
+                  <p className="text-sm font-semibold text-white">
+                    {balance.toLocaleString()} USDC
+                  </p>
+                </div>
+              </div>
+
               {/* Notifications */}
               <button className="relative p-2 text-white/50 hover:text-white transition-colors">
                 <Bell className="w-5 h-5" />
@@ -318,19 +386,19 @@ export default function DashboardLayout({
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors max-w-[280px]"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-purple-400 flex items-center justify-center">
                     <span className="text-white text-sm font-medium">
-                      {isCompany ? company?.name : employee?.name || "User"}
+                      {avatarLabel}
                     </span>
                   </div>
-                  <div className="hidden sm:block text-left">
-                    <p className="text-white text-sm font-medium">
-                      {isCompany ? company?.name : employee?.name || "User"}
+                  <div className="hidden sm:block text-left min-w-0 flex-1">
+                    <p className="text-white text-sm font-medium truncate">
+                      {displayName}
                     </p>
-                    <p className="text-white/40 text-xs">
-                      {isCompany ? company?.email : employee?.email || "user@example.com"}
+                    <p className="text-white/40 text-xs truncate">
+                      {displayEmail}
                     </p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-white/50" />
@@ -367,7 +435,24 @@ export default function DashboardLayout({
           </header>
 
           {/* Page content */}
-          <main className="p-4 lg:p-8">{children}</main>
+          <main className="p-4 lg:p-8 space-y-4">
+            <div className="sm:hidden rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-400/15 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-white/40">
+                    USDC Balance
+                  </p>
+                  <p className="text-sm font-semibold text-white">
+                    {balance.toLocaleString()} USDC
+                  </p>
+                </div>
+              </div>
+            </div>
+            {children}
+          </main>
         </div>
       </div>
     </ProtectedRoute>

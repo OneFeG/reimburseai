@@ -20,7 +20,7 @@ export function Logo({ className, showText = true, size = "md" }: LogoProps) {
     <div className={cn("flex items-center gap-2", className)}>
       {/* Logo Image */}
       <Image
-        src="/logo.png"
+        src="/img/logo.png"
         alt="Reimburse AI Logo"
         width={sizes[size].logo}
         height={sizes[size].logo}

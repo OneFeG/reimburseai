@@ -1,7 +1,7 @@
 "use client";
 
 import { ProtectedRoute } from "@/components/protectedRoute";
-import { Logo } from "@/components/brand/logo";
+import { Logo } from "@/components/ui/logo";
 import { useAuth, useProfile } from "@/hooks";
 import api from "@/lib/api/client";
 import {

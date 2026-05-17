@@ -1,6 +1,6 @@
 "use client";
 
-import { Logo } from "@/components/brand/logo";
+import { Logo } from "@/components/ui/logo";
 import { Bell, ChevronDown, Shield, User } from "lucide-react";
 import { useProfile } from "@/hooks";
 
